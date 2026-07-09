@@ -76,10 +76,18 @@ async function saveAsset() {
     }
 
     // Check if asset with same name already exists
-    const { data: existingAssets } = await supabaseClient
+    console.log("Checking for duplicate asset:", name);
+    const { data: existingAssets, error: checkError } = await supabaseClient
         .from("assets")
         .select("name")
         .eq("name", name);
+
+    console.log("Existing assets:", existingAssets);
+    console.log("Check error:", checkError);
+
+    if (checkError) {
+        console.error("Error checking for duplicates:", checkError);
+    }
 
     if (existingAssets && existingAssets.length > 0) {
         alert("An asset with this name already exists");

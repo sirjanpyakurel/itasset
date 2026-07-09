@@ -203,11 +203,11 @@ Other
 
 <input 
 id="assetQuantity"
-type="number"
+type="text"
 placeholder="Quantity"
 min="1"
-step="1"
 required
+onkeypress="return event.charCode >= 48 && event.charCode <= 57"
 oninput="this.value = this.value.replace(/[^0-9]/g, '')"
 >
 
