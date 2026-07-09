@@ -142,9 +142,35 @@ async function saveAsset() {
     loadAssets();
 }
 
+let currentRemoveAssetId = null;
+let currentRemoveAssetQuantity = null;
+
+function openRemoveModal(id, currentQuantity) {
+    currentRemoveAssetId = id;
+    currentRemoveAssetQuantity = currentQuantity;
+    document.getElementById("removeQuantityInput").value = "";
+    document.getElementById("removeReasonInput").value = "";
+    document.getElementById("removeModal").style.display = "flex";
+}
+
+function closeRemoveModal() {
+    document.getElementById("removeModal").style.display = "none";
+    currentRemoveAssetId = null;
+    currentRemoveAssetQuantity = null;
+}
+
 async function removeAsset(id, currentQuantity) {
-    const amountStr = prompt("How many do you want to remove?");
-    if (!amountStr) return;
+    openRemoveModal(id, currentQuantity);
+}
+
+async function confirmRemove() {
+    const amountStr = document.getElementById("removeQuantityInput").value;
+    const reason = document.getElementById("removeReasonInput").value;
+
+    if (!amountStr) {
+        alert("Please enter a quantity");
+        return;
+    }
 
     // Validate that input is a number
     if (!/^\d+$/.test(amountStr)) {
@@ -159,12 +185,11 @@ async function removeAsset(id, currentQuantity) {
         return;
     }
 
-    if (amount > currentQuantity) {
+    if (amount > currentRemoveAssetQuantity) {
         alert("Not enough stock");
         return;
     }
 
-    const reason = prompt("Reason for removal:");
     if (!reason || !reason.trim()) {
         alert("Reason required");
         return;
@@ -183,12 +208,12 @@ async function removeAsset(id, currentQuantity) {
     const emailPrefix = session.user.email ? session.user.email.split('@')[0] : 'Unknown';
     console.log("Email prefix:", emailPrefix);
 
-    const newQuantity = currentQuantity - amount;
+    const newQuantity = currentRemoveAssetQuantity - amount;
 
     const { error } = await supabaseClient
         .from("assets")
         .update({ quantity: newQuantity })
-        .eq("id", id);
+        .eq("id", currentRemoveAssetId);
 
     if (error) {
         alert(error.message);
@@ -198,7 +223,7 @@ async function removeAsset(id, currentQuantity) {
     await supabaseClient
         .from("history")
         .insert({
-            asset_id: id,
+            asset_id: currentRemoveAssetId,
             user_id: session.user.id,
             action: "REMOVE",
             quantity: amount,
@@ -206,6 +231,7 @@ async function removeAsset(id, currentQuantity) {
             done_by: emailPrefix
         });
 
+    closeRemoveModal();
     loadAssets();
 }
 
@@ -246,6 +272,18 @@ async function initDashboard() {
             e.preventDefault();
             await saveAsset();
         });
+    }
+
+    // Setup remove modal event listeners
+    const confirmRemoveButton = document.getElementById("confirmRemoveButton");
+    const cancelRemoveButton = document.getElementById("cancelRemoveButton");
+
+    if (confirmRemoveButton) {
+        confirmRemoveButton.addEventListener("click", confirmRemove);
+    }
+
+    if (cancelRemoveButton) {
+        cancelRemoveButton.addEventListener("click", closeRemoveModal);
     }
 
     loadAssets();

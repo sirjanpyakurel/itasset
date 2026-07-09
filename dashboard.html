@@ -235,7 +235,30 @@ Cancel
 
 </div>
 
-
+<div id="removeModal" class="modal">
+    <div class="modal-content">
+        <h2>Remove Quantity</h2>
+        <p>How many do you want to remove?</p>
+        <input 
+            id="removeQuantityInput" 
+            type="number" 
+            min="1" 
+            placeholder="Enter quantity"
+            onkeypress="return event.charCode >= 48 && event.charCode <= 57"
+            oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+        >
+        <p id="removeReasonLabel">Reason for removal:</p>
+        <input 
+            id="removeReasonInput" 
+            type="text" 
+            placeholder="Enter reason"
+        >
+        <div class="modal-buttons">
+            <button id="confirmRemoveButton">Remove</button>
+            <button id="cancelRemoveButton" class="cancel">Cancel</button>
+        </div>
+    </div>
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/config.js"></script>
