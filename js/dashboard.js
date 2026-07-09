@@ -169,6 +169,7 @@ function closeRemoveModal() {
 }
 
 async function removeAsset(id, currentQuantity) {
+    console.log("removeAsset called with id:", id, "quantity:", currentQuantity);
     openRemoveModal(id, currentQuantity);
 }
 
