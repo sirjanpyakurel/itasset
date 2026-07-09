@@ -16,6 +16,23 @@ async function login() {
     window.location.href = "dashboard.html";
 }
 
+async function signup() {
+    const email = document.getElementById("email").value;
+    const password = document.getElementById("password").value;
+
+    const { error } = await supabaseClient.auth.signUp({
+        email,
+        password
+    });
+
+    if (error) {
+        document.getElementById("message").innerText = error.message;
+        return;
+    }
+
+    document.getElementById("message").innerText = "Sign up successful! Please check your email to confirm your account.";
+}
+
 async function checkUser() {
     const { data: { session } } = await supabaseClient.auth.getSession();
 
@@ -74,6 +91,32 @@ function setupLoginForm() {
             if (e.key === "Enter") {
                 e.preventDefault();
                 await login();
+            }
+        };
+
+        emailInput.addEventListener("keydown", handleEnter);
+        passwordInput.addEventListener("keydown", handleEnter);
+    }
+}
+
+function setupSignupForm() {
+    const form = document.getElementById("signupForm");
+    if (!form) return;
+
+    form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        await signup();
+    });
+
+    // Add Enter key handler as backup
+    const emailInput = document.getElementById("email");
+    const passwordInput = document.getElementById("password");
+
+    if (emailInput && passwordInput) {
+        const handleEnter = async (e) => {
+            if (e.key === "Enter") {
+                e.preventDefault();
+                await signup();
             }
         };
 
