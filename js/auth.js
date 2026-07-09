@@ -25,16 +25,35 @@ async function checkUser() {
 }
 
 async function requireAuth() {
-    const { data: { session } } = await supabaseClient.auth.getSession();
+    // Set timeout fallback before auth check
+    const timeoutId = setTimeout(() => {
+        if (document.body.style.display === "none") {
+            console.warn("Auth check timeout, showing body");
+            document.body.style.display = "block";
+        }
+    }, 2000);
 
-    if (!session) {
+    try {
+        const { data: { session } } = await supabaseClient.auth.getSession();
+
+        clearTimeout(timeoutId); // Clear timeout if auth check completes
+
+        if (!session) {
+            window.location.replace("index.html");
+            return false;
+        }
+
+        // Show body only if authenticated
+        document.body.style.display = "block";
+        return true;
+    } catch (error) {
+        clearTimeout(timeoutId); // Clear timeout on error
+        console.error("Auth check failed:", error);
+        // Show body even if auth check fails to prevent white screen
+        document.body.style.display = "block";
         window.location.replace("index.html");
         return false;
     }
-
-    // Show body only if authenticated
-    document.body.style.display = "block";
-    return true;
 }
 
 function setupLoginForm() {
