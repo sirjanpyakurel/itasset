@@ -82,6 +82,9 @@ async function saveAsset() {
         return;
     }
 
+    // Extract email prefix (part before @)
+    const emailPrefix = user.email ? user.email.split('@')[0] : 'Unknown';
+
     const { data, error } = await supabaseClient
         .from("assets")
         .insert({
@@ -105,7 +108,8 @@ async function saveAsset() {
             asset_id: data.id,
             user_id: user.id,
             action: "ADD",
-            quantity
+            quantity,
+            done_by: emailPrefix
         });
 
     closeAddModal();
@@ -141,6 +145,9 @@ async function removeAsset(id, currentQuantity) {
         return;
     }
 
+    // Extract email prefix (part before @)
+    const emailPrefix = user.email ? user.email.split('@')[0] : 'Unknown';
+
     const newQuantity = currentQuantity - amount;
 
     const { error } = await supabaseClient
@@ -160,7 +167,8 @@ async function removeAsset(id, currentQuantity) {
             user_id: user.id,
             action: "REMOVE",
             quantity: amount,
-            reason: reason.trim()
+            reason: reason.trim(),
+            done_by: emailPrefix
         });
 
     loadAssets();

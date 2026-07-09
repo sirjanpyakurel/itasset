@@ -7,7 +7,7 @@ function renderHistoryRow(row, index) {
         row.assets?.name ?? "Deleted asset",
         row.action,
         row.quantity,
-        row.profiles?.full_name ?? "Unknown",
+        row.done_by ?? "Unknown",
         row.reason ?? "-"
     ];
 
@@ -27,8 +27,7 @@ async function loadHistory() {
         .from("history")
         .select(`
             *,
-            assets(name),
-            profiles(full_name)
+            assets(name)
         `)
         .order("created_at", { ascending: false });
 
