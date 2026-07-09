@@ -1,4 +1,5 @@
 function renderAssetRow(asset) {
+    console.log("Rendering asset row for:", asset);
     const row = document.createElement("tr");
 
     const nameCell = document.createElement("td");
@@ -14,7 +15,10 @@ function renderAssetRow(asset) {
     const removeBtn = document.createElement("button");
     removeBtn.className = "remove";
     removeBtn.textContent = "Remove";
-    removeBtn.onclick = () => removeAsset(asset.id, asset.quantity);
+    removeBtn.onclick = () => {
+        console.log("Remove button clicked for asset:", asset.id, "quantity:", asset.quantity);
+        removeAsset(asset.id, asset.quantity);
+    };
     actionCell.appendChild(removeBtn);
 
     row.append(nameCell, categoryCell, quantityCell, actionCell);
@@ -22,6 +26,7 @@ function renderAssetRow(asset) {
 }
 
 function renderAssets(data) {
+    console.log("Rendering assets, data:", data);
     const table = document.getElementById("assetTable");
     table.innerHTML = "";
 
