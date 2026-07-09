@@ -46,18 +46,24 @@ async function loadHistory() {
     let filteredData = data;
 
     if (dateFilter) {
-        // Parse the filter date as local date (midnight in user's timezone)
+        // Parse the filter date as local date (user's timezone)
         const [year, month, day] = dateFilter.split('-').map(Number);
-        const filterDateStart = new Date(year, month - 1, day, 0, 0, 0); // Local midnight
-        const filterDateEnd = new Date(year, month - 1, day, 23, 59, 59, 999); // End of day
         
-        // Convert to UTC timestamps for comparison
-        const startUTC = filterDateStart.getTime();
-        const endUTC = filterDateEnd.getTime();
+        // Create the start of the day in user's local timezone
+        const localStart = new Date(year, month - 1, day, 0, 0, 0);
+        
+        // Get the timezone offset in minutes (negative for UTC-05:00)
+        const offset = localStart.getTimezoneOffset();
+        
+        // Convert to UTC by subtracting the offset (in milliseconds)
+        const startUTC = localStart.getTime() - (offset * 60000);
+        
+        // End of day is 24 hours later
+        const endUTC = startUTC + (24 * 60 * 60 * 1000);
         
         filteredData = data.filter(row => {
             const rowTimestamp = new Date(row.created_at).getTime();
-            return rowTimestamp >= startUTC && rowTimestamp <= endUTC;
+            return rowTimestamp >= startUTC && rowTimestamp < endUTC;
         });
     }
 
