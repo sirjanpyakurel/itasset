@@ -46,13 +46,16 @@ async function loadHistory() {
     let filteredData = data;
 
     if (dateFilter) {
-        const filterDate = new Date(dateFilter);
+        // Parse the filter date as local date (not UTC)
+        const [year, month, day] = dateFilter.split('-').map(Number);
+        const filterDate = new Date(year, month - 1, day); // month is 0-indexed
+        
         filteredData = data.filter(row => {
             const rowDate = new Date(row.created_at);
-            // Convert both to local date strings for comparison
-            const rowDateStr = rowDate.toLocaleDateString('en-CA'); // en-CA gives YYYY-MM-DD format
-            const filterDateStr = filterDate.toLocaleDateString('en-CA');
-            return rowDateStr === filterDateStr;
+            // Compare year, month, and day in local timezone
+            return rowDate.getFullYear() === filterDate.getFullYear() &&
+                   rowDate.getMonth() === filterDate.getMonth() &&
+                   rowDate.getDate() === filterDate.getDate();
         });
     }
 
