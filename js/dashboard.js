@@ -146,11 +146,20 @@ let currentRemoveAssetId = null;
 let currentRemoveAssetQuantity = null;
 
 function openRemoveModal(id, currentQuantity) {
+    console.log("Opening remove modal for asset:", id, "quantity:", currentQuantity);
     currentRemoveAssetId = id;
     currentRemoveAssetQuantity = currentQuantity;
-    document.getElementById("removeQuantityInput").value = "";
-    document.getElementById("removeReasonInput").value = "";
-    document.getElementById("removeModal").style.display = "flex";
+    const removeModal = document.getElementById("removeModal");
+    const quantityInput = document.getElementById("removeQuantityInput");
+    const reasonInput = document.getElementById("removeReasonInput");
+    
+    console.log("Modal element:", removeModal);
+    console.log("Quantity input:", quantityInput);
+    console.log("Reason input:", reasonInput);
+    
+    if (quantityInput) quantityInput.value = "";
+    if (reasonInput) reasonInput.value = "";
+    if (removeModal) removeModal.style.display = "flex";
 }
 
 function closeRemoveModal() {
