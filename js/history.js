@@ -46,16 +46,18 @@ async function loadHistory() {
     let filteredData = data;
 
     if (dateFilter) {
-        // Parse the filter date as UTC date
+        // Parse the filter date as local date (midnight in user's timezone)
         const [year, month, day] = dateFilter.split('-').map(Number);
-        const filterDate = new Date(Date.UTC(year, month - 1, day)); // month is 0-indexed
+        const filterDateStart = new Date(year, month - 1, day, 0, 0, 0); // Local midnight
+        const filterDateEnd = new Date(year, month - 1, day, 23, 59, 59, 999); // End of day
+        
+        // Convert to UTC timestamps for comparison
+        const startUTC = filterDateStart.getTime();
+        const endUTC = filterDateEnd.getTime();
         
         filteredData = data.filter(row => {
-            const rowDate = new Date(row.created_at);
-            // Compare year, month, and day in UTC
-            return rowDate.getUTCFullYear() === filterDate.getUTCFullYear() &&
-                   rowDate.getUTCMonth() === filterDate.getUTCMonth() &&
-                   rowDate.getUTCDate() === filterDate.getUTCDate();
+            const rowTimestamp = new Date(row.created_at).getTime();
+            return rowTimestamp >= startUTC && rowTimestamp <= endUTC;
         });
     }
 
