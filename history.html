@@ -42,7 +42,7 @@ Dashboard
 
 <div class="actions">
 
-<select id="filter" onchange="loadHistory()">
+<select id="filter">
 
 <option value="ALL">
 All
@@ -62,9 +62,12 @@ Removed
 <input 
 id="dateFilter"
 type="date"
-onchange="loadHistory()"
 placeholder="Filter by date"
 >
+
+<button onclick="loadHistory()">
+Search
+</button>
 
 </div>
 
