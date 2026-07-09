@@ -75,6 +75,17 @@ async function saveAsset() {
         return;
     }
 
+    // Check if asset with same name already exists
+    const { data: existingAssets } = await supabaseClient
+        .from("assets")
+        .select("name")
+        .eq("name", name);
+
+    if (existingAssets && existingAssets.length > 0) {
+        alert("An asset with this name already exists");
+        return;
+    }
+
     const { data: { session } } = await supabaseClient.auth.getSession();
 
     if (!session || !session.user) {
@@ -122,6 +133,12 @@ async function saveAsset() {
 async function removeAsset(id, currentQuantity) {
     const amountStr = prompt("How many do you want to remove?");
     if (!amountStr) return;
+
+    // Validate that input is a number
+    if (!/^\d+$/.test(amountStr)) {
+        alert("Please enter a valid number");
+        return;
+    }
 
     const amount = parseInt(amountStr, 10);
 

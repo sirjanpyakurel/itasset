@@ -206,7 +206,9 @@ id="assetQuantity"
 type="number"
 placeholder="Quantity"
 min="1"
+step="1"
 required
+oninput="this.value = this.value.replace(/[^0-9]/g, '')"
 >
 
 
