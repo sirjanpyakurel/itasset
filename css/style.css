@@ -558,7 +558,11 @@ margin:30px 0;
 
 }
 
-.actions select{
+.actions select,
+
+.actions input[type="date"],
+
+.actions button{
 
 height:50px;
 
@@ -584,45 +588,47 @@ font-weight:500;
 
 min-width:150px;
 
+display:flex;
+
+align-items:center;
+
+justify-content:center;
+
 }
 
-.actions select:focus{
+.actions select{
 
-outline:none;
-
-border-color:#667eea;
-
-background:white;
-
-box-shadow:0 0 0 4px rgba(102, 126, 234, 0.1);
+min-width:150px;
 
 }
 
 .actions input[type="date"]{
 
-height:50px;
-
-padding:0 20px;
-
-border-radius:12px;
-
-border:2px solid #e2e8f0;
-
-background:#f8fafc;
-
-font-size:15px;
-
-color:#334155;
-
-outline:none;
-
-transition:all 0.3s ease;
-
-cursor:pointer;
-
-font-weight:500;
+min-width:180px;
 
 }
+
+.actions button{
+
+min-width:140px;
+
+background:linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+
+color:white;
+
+border:none;
+
+}
+
+.actions button:hover{
+
+transform:translateY(-2px);
+
+box-shadow:0 8px 20px rgba(102, 126, 234, 0.3);
+
+}
+
+.actions select:focus,
 
 .actions input[type="date"]:focus{
 

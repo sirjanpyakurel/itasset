@@ -49,7 +49,10 @@ async function loadHistory() {
         const filterDate = new Date(dateFilter);
         filteredData = data.filter(row => {
             const rowDate = new Date(row.created_at);
-            return rowDate.toDateString() === filterDate.toDateString();
+            // Compare dates using UTC to avoid timezone issues
+            const rowDateUTC = Date.UTC(rowDate.getFullYear(), rowDate.getMonth(), rowDate.getDate());
+            const filterDateUTC = Date.UTC(filterDate.getFullYear(), filterDate.getMonth(), filterDate.getDate());
+            return rowDateUTC === filterDateUTC;
         });
     }
 
