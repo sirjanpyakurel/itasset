@@ -83,7 +83,10 @@ async function saveAsset() {
     }
 
     // Extract email prefix (part before @)
+    console.log("User object:", user);
+    console.log("User email:", user.email);
     const emailPrefix = user.email ? user.email.split('@')[0] : 'Unknown';
+    console.log("Email prefix:", emailPrefix);
 
     const { data, error } = await supabaseClient
         .from("assets")
@@ -146,7 +149,10 @@ async function removeAsset(id, currentQuantity) {
     }
 
     // Extract email prefix (part before @)
+    console.log("User object:", user);
+    console.log("User email:", user.email);
     const emailPrefix = user.email ? user.email.split('@')[0] : 'Unknown';
+    console.log("Email prefix:", emailPrefix);
 
     const newQuantity = currentQuantity - amount;
 
