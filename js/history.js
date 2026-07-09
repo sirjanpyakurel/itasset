@@ -46,12 +46,12 @@ async function loadHistory() {
     let filteredData = data;
 
     if (dateFilter) {
-        const filterDate = new Date(dateFilter + 'T00:00:00');
+        const filterDate = new Date(dateFilter);
         filteredData = data.filter(row => {
             const rowDate = new Date(row.created_at);
-            // Extract date parts directly from the ISO string
-            const rowDateStr = row.created_at.split('T')[0];
-            const filterDateStr = dateFilter;
+            // Convert both to local date strings for comparison
+            const rowDateStr = rowDate.toLocaleDateString('en-CA'); // en-CA gives YYYY-MM-DD format
+            const filterDateStr = filterDate.toLocaleDateString('en-CA');
             return rowDateStr === filterDateStr;
         });
     }
