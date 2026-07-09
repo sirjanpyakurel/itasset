@@ -75,17 +75,17 @@ async function saveAsset() {
         return;
     }
 
-    const { data: { user } } = await supabaseClient.auth.getUser();
+    const { data: { session } } = await supabaseClient.auth.getSession();
 
-    if (!user) {
+    if (!session || !session.user) {
         window.location.href = "index.html";
         return;
     }
 
     // Extract email prefix (part before @)
-    console.log("User object:", user);
-    console.log("User email:", user.email);
-    const emailPrefix = user.email ? user.email.split('@')[0] : 'Unknown';
+    console.log("Session user:", session.user);
+    console.log("User email:", session.user.email);
+    const emailPrefix = session.user.email ? session.user.email.split('@')[0] : 'Unknown';
     console.log("Email prefix:", emailPrefix);
 
     const { data, error } = await supabaseClient
@@ -95,7 +95,7 @@ async function saveAsset() {
             category,
             quantity,
             description,
-            created_by: user.id
+            created_by: session.user.id
         })
         .select()
         .single();
@@ -109,7 +109,7 @@ async function saveAsset() {
         .from("history")
         .insert({
             asset_id: data.id,
-            user_id: user.id,
+            user_id: session.user.id,
             action: "ADD",
             quantity,
             done_by: emailPrefix
@@ -141,17 +141,17 @@ async function removeAsset(id, currentQuantity) {
         return;
     }
 
-    const { data: { user } } = await supabaseClient.auth.getUser();
+    const { data: { session } } = await supabaseClient.auth.getSession();
 
-    if (!user) {
+    if (!session || !session.user) {
         window.location.href = "index.html";
         return;
     }
 
     // Extract email prefix (part before @)
-    console.log("User object:", user);
-    console.log("User email:", user.email);
-    const emailPrefix = user.email ? user.email.split('@')[0] : 'Unknown';
+    console.log("Session user:", session.user);
+    console.log("User email:", session.user.email);
+    const emailPrefix = session.user.email ? session.user.email.split('@')[0] : 'Unknown';
     console.log("Email prefix:", emailPrefix);
 
     const newQuantity = currentQuantity - amount;
@@ -170,7 +170,7 @@ async function removeAsset(id, currentQuantity) {
         .from("history")
         .insert({
             asset_id: id,
-            user_id: user.id,
+            user_id: session.user.id,
             action: "REMOVE",
             quantity: amount,
             reason: reason.trim(),
