@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<title>IT Inventory</title>
+
+<link rel="stylesheet" href="css/style.css">
+
+</head>
+
+
+<body>
+
+
+<div class="container">
+
+
+
+
+<div class="header">
+
+<div>
+<h1>IT Inventory</h1>
+<p>Storage Management System</p>
+</div>
+
+
+<div>
+
+<button class="low-btn" onclick="showLowInventory()">
+Low Inventory
+</button>
+
+
+<a href="history.html">
+<button class="history-btn">
+History
+</button>
+</a>
+
+
+<button class="logout" onclick="logout()">
+Logout
+</button>
+
+
+</div>
+
+
+</div>
+
+
+
+
+<div class="cards">
+
+
+<div class="card">
+
+<h3>Total Assets</h3>
+
+<h2 id="totalAssets">
+0
+</h2>
+
+</div>
+
+
+
+<div class="card">
+
+<h3>Total Quantity</h3>
+
+<h2 id="totalQuantity">
+0
+</h2>
+
+</div>
+
+
+</div>
+
+
+
+
+<div class="actions">
+
+
+<input 
+id="searchBox"
+placeholder="Search inventory..."
+onkeyup="searchAssets()"
+>
+
+
+<button onclick="openAddModal()">
++ Add Asset
+</button>
+
+
+</div>
+
+
+
+
+<div class="table-box">
+
+
+<table>
+
+
+<thead>
+
+<tr>
+
+<th>Name</th>
+<th>Category</th>
+<th>Quantity</th>
+<th>Action</th>
+
+</tr>
+
+
+</thead>
+
+
+<tbody id="assetTable">
+
+</tbody>
+
+
+</table>
+
+
+</div>
+
+
+</div>
+
+<div id="addModal" class="modal">
+
+
+<div class="modal-content">
+
+
+<h2>Add Asset</h2>
+
+
+<form id="addAssetForm">
+
+<input 
+id="assetName"
+placeholder="Asset Name"
+required
+>
+
+
+<select id="assetCategory" required>
+
+<option value="">
+Select Category
+</option>
+
+<option value="Monitor">
+Monitor
+</option>
+
+<option value="Laptop">
+Laptop
+</option>
+
+<option value="Keyboard">
+Keyboard
+</option>
+
+<option value="Mouse">
+Mouse
+</option>
+
+<option value="Cable">
+Cable
+</option>
+
+<option value="Adapter">
+Adapter
+</option>
+
+<option value="Docking Station">
+Docking Station
+</option>
+
+<option value="Printer">
+Printer
+</option>
+
+<option value="Other">
+Other
+</option>
+
+</select>
+
+
+<input 
+id="assetQuantity"
+type="number"
+placeholder="Quantity"
+min="1"
+required
+>
+
+
+<input 
+id="assetDescription"
+placeholder="Description"
+>
+
+
+
+<button type="submit">
+Save
+</button>
+
+
+<button type="button" class="cancel" onclick="closeAddModal()">
+Cancel
+</button>
+
+</form>
+
+
+</div>
+
+</div>
+
+
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/config.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/dashboard.js"></script>
+
+
+</body>
+
+</html>

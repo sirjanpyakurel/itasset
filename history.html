@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<title>History</title>
+
+<link rel="stylesheet" href="css/style.css">
+
+</head>
+
+
+<body>
+
+
+<div class="container">
+
+
+<div class="header">
+
+
+<h1>Inventory History</h1>
+
+
+<div>
+
+<a href="dashboard.html">
+<button>
+Dashboard
+</button>
+</a>
+
+
+</div>
+
+
+</div>
+
+
+
+<br>
+
+
+<select id="filter" onchange="loadHistory()">
+
+<option value="ALL">
+All
+</option>
+
+<option value="ADD">
+Added
+</option>
+
+<option value="REMOVE">
+Removed
+</option>
+
+
+</select>
+
+
+
+<div class="table-box">
+
+
+<table>
+
+<thead>
+
+<tr>
+
+<th>No.</th>
+<th>Date</th>
+<th>Asset</th>
+<th>Action</th>
+<th>Quantity</th>
+<th>Done By</th>
+<th>Reason</th>
+
+
+</tr>
+
+</thead>
+
+
+<tbody id="historyTable">
+
+
+</tbody>
+
+
+</table>
+
+
+</div>
+
+
+</div>
+
+
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/config.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/history.js"></script>
+
+
+</body>
+
+</html>
