@@ -75,12 +75,11 @@ async function saveAsset() {
         return;
     }
 
-    // Check if asset with same name already exists
+    // Check if asset with same name already exists (case-insensitive)
     console.log("Checking for duplicate asset:", name);
     const { data: existingAssets, error: checkError } = await supabaseClient
         .from("assets")
-        .select("name")
-        .eq("name", name);
+        .select("name");
 
     console.log("Existing assets:", existingAssets);
     console.log("Check error:", checkError);
@@ -89,7 +88,12 @@ async function saveAsset() {
         console.error("Error checking for duplicates:", checkError);
     }
 
-    if (existingAssets && existingAssets.length > 0) {
+    // Case-insensitive comparison
+    const duplicateExists = existingAssets && existingAssets.some(
+        asset => asset.name.toLowerCase() === name.toLowerCase()
+    );
+
+    if (duplicateExists) {
         alert("An asset with this name already exists");
         return;
     }
