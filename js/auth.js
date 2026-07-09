@@ -32,6 +32,8 @@ async function requireAuth() {
         return false;
     }
 
+    // Show body only if authenticated
+    document.body.style.display = "block";
     return true;
 }
 
