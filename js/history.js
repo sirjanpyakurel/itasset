@@ -46,13 +46,13 @@ async function loadHistory() {
     let filteredData = data;
 
     if (dateFilter) {
-        const filterDate = new Date(dateFilter);
+        const filterDate = new Date(dateFilter + 'T00:00:00');
         filteredData = data.filter(row => {
             const rowDate = new Date(row.created_at);
-            // Compare dates using UTC to avoid timezone issues
-            const rowDateUTC = Date.UTC(rowDate.getFullYear(), rowDate.getMonth(), rowDate.getDate());
-            const filterDateUTC = Date.UTC(filterDate.getFullYear(), filterDate.getMonth(), filterDate.getDate());
-            return rowDateUTC === filterDateUTC;
+            // Extract date parts directly from the ISO string
+            const rowDateStr = row.created_at.split('T')[0];
+            const filterDateStr = dateFilter;
+            return rowDateStr === filterDateStr;
         });
     }
 
