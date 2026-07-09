@@ -22,6 +22,7 @@ function renderHistoryRow(row, index) {
 
 async function loadHistory() {
     const filter = document.getElementById("filter").value;
+    const dateFilter = document.getElementById("dateFilter").value;
 
     let query = supabaseClient
         .from("history")
@@ -42,10 +43,20 @@ async function loadHistory() {
         return;
     }
 
+    let filteredData = data;
+
+    if (dateFilter) {
+        const filterDate = new Date(dateFilter);
+        filteredData = data.filter(row => {
+            const rowDate = new Date(row.created_at);
+            return rowDate.toDateString() === filterDate.toDateString();
+        });
+    }
+
     const table = document.getElementById("historyTable");
     table.innerHTML = "";
 
-    data.forEach((row, i) => {
+    filteredData.forEach((row, i) => {
         table.appendChild(renderHistoryRow(row, i + 1));
     });
 }

@@ -140,6 +140,7 @@ async function saveAsset() {
             user_id: session.user.id,
             action: "ADD",
             quantity,
+            reason: description || "-",
             done_by: emailPrefix
         });
 
