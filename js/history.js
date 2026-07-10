@@ -46,24 +46,17 @@ async function loadHistory() {
     let filteredData = data;
 
     if (dateFilter) {
-        // Parse the filter date as local date (user's timezone)
+        // dateFilter is "YYYY-MM-DD" from the date input
         const [year, month, day] = dateFilter.split('-').map(Number);
-        
-        // Create the start of the day in user's local timezone
-        const localStart = new Date(year, month - 1, day, 0, 0, 0);
-        
-        // Get the timezone offset in minutes (negative for UTC-05:00)
-        const offset = localStart.getTimezoneOffset();
-        
-        // Convert to UTC by subtracting the offset (in milliseconds)
-        const startUTC = localStart.getTime() - (offset * 60000);
-        
-        // End of day is 24 hours later
-        const endUTC = startUTC + (24 * 60 * 60 * 1000);
-        
+
+        // Compare local calendar date components — the exact same local date
+        // the table displays via toLocaleDateString(), so the filter can
+        // never disagree with what's shown in the Date column.
         filteredData = data.filter(row => {
-            const rowTimestamp = new Date(row.created_at).getTime();
-            return rowTimestamp >= startUTC && rowTimestamp < endUTC;
+            const d = new Date(row.created_at);
+            return d.getFullYear() === year &&
+                   d.getMonth() === month - 1 &&
+                   d.getDate() === day;
         });
     }
 
