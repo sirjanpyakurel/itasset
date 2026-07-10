@@ -1,266 +1,130 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="en">
 <head>
-
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>IT Inventory</title>
-
-<link rel="stylesheet" href="css/style.css">
-
+<link rel="stylesheet" href="css/style.css?v=3">
 </head>
-
 
 <body style="display: none;">
 
-
 <div class="container">
 
+    <div class="header">
+        <div>
+            <h1 onclick="window.location.reload()">IT Inventory</h1>
+            <p>Storage Management System</p>
+        </div>
+        <div>
+            <a href="history.html"><button class="history-btn">History</button></a>
+            <button class="logout" onclick="logout()">Logout</button>
+        </div>
+    </div>
 
+    <div class="cards">
+        <div class="card">
+            <h3>Total Assets</h3>
+            <h2 id="totalAssets">–</h2>
+        </div>
+        <div class="card">
+            <h3>Total Quantity</h3>
+            <h2 id="totalQuantity">–</h2>
+        </div>
+        <div class="card clickable" id="lowStockCard" onclick="toggleLowFilter()" title="Click to show items that need ordering">
+            <h3>Needs Ordering</h3>
+            <h2 id="lowStockCount">–</h2>
+            <small>click to view</small>
+        </div>
+    </div>
 
+    <div class="actions">
+        <input id="searchBox" placeholder="Search inventory..." oninput="applyFilters()">
+        <select id="categoryFilter" onchange="applyFilters()">
+            <option value="">All Categories</option>
+        </select>
+        <span class="filter-pill" id="lowPill">
+            Showing items to order
+            <button onclick="toggleLowFilter()" title="Clear">&times;</button>
+        </span>
+        <span class="spacer"></span>
+        <button class="secondary" id="exportReorderBtn" onclick="exportReorderList()">Export Reorder List</button>
+        <button onclick="openAddModal()">+ Add Asset</button>
+    </div>
 
-<div class="header">
-
-<div>
-<h1 style="cursor: pointer;" onclick="window.location.reload()">IT Inventory</h1>
-<p>Storage Management System</p>
-</div>
-
-
-<div>
-
-<button class="low-btn" onclick="showLowInventory()">
-Low Inventory
-</button>
-
-
-<a href="history.html">
-<button class="history-btn">
-History
-</button>
-</a>
-
-
-<button class="logout" onclick="logout()">
-Logout
-</button>
-
-
-</div>
-
-
-</div>
-
-
-
-
-<div class="cards">
-
-
-<div class="card">
-
-<h3>Total Assets</h3>
-
-<h2 id="totalAssets">
-0
-</h2>
-
-</div>
-
-
-
-<div class="card">
-
-<h3>Total Quantity</h3>
-
-<h2 id="totalQuantity">
-0
-</h2>
+    <div class="table-box">
+        <table>
+            <thead>
+                <tr>
+                    <th class="sortable" onclick="setSort('name')">Name<span class="sort-arrow" data-key="name"></span></th>
+                    <th class="sortable" onclick="setSort('category')">Category<span class="sort-arrow" data-key="category"></span></th>
+                    <th class="sortable" onclick="setSort('quantity')">Quantity<span class="sort-arrow" data-key="quantity"></span></th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="assetTable"></tbody>
+        </table>
+    </div>
 
 </div>
 
+<!-- Add / Edit asset modal -->
+<div id="assetModal" class="modal">
+    <div class="modal-content">
+        <h2 id="assetModalTitle">Add Asset</h2>
+        <form id="assetForm">
+            <label for="assetName">Name</label>
+            <input id="assetName" placeholder="e.g. Dell 24&quot; Monitor" required>
 
+            <label for="assetCategory">Category</label>
+            <select id="assetCategory" required>
+                <option value="">Select Category</option>
+                <option>Monitor</option>
+                <option>Laptop</option>
+                <option>Keyboard</option>
+                <option>Mouse</option>
+                <option>Cable</option>
+                <option>Adapter</option>
+                <option>Docking Station</option>
+                <option>Headset</option>
+                <option>iPhone Case</option>
+                <option>iPad Case</option>
+                <option>Other</option>
+            </select>
+
+            <label for="assetQuantity" id="assetQuantityLabel">Quantity</label>
+            <input id="assetQuantity" type="number" min="0" placeholder="0" required
+                   oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+
+            <label for="assetReorderLevel">Low-stock alert when below</label>
+            <input id="assetReorderLevel" type="number" min="0" placeholder="5"
+                   oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+
+            <label for="assetDescription">Description</label>
+            <input id="assetDescription" placeholder="Optional">
+
+            <div class="modal-buttons">
+                <button type="submit" id="assetSaveBtn">Save</button>
+                <button type="button" class="cancel" onclick="closeAssetModal()">Cancel</button>
+            </div>
+            <div class="modal-buttons" id="deleteAssetRow" style="display:none">
+                <button type="button" class="btn-danger" id="deleteAssetBtn">Delete this asset</button>
+            </div>
+        </form>
+    </div>
 </div>
 
-
-
-
-<div class="actions">
-
-
-<input 
-id="searchBox"
-placeholder="Search inventory..."
-onkeyup="searchAssets()"
->
-
-
-<button onclick="openAddModal()">
-+ Add Asset
-</button>
-
-
-</div>
-
-
-
-
-<div class="table-box">
-
-
-<table>
-
-
-<thead>
-
-<tr>
-
-<th>Name</th>
-<th>Category</th>
-<th>Quantity</th>
-<th>Action</th>
-
-</tr>
-
-
-</thead>
-
-
-<tbody id="assetTable">
-
-</tbody>
-
-
-</table>
-
-
-</div>
-
-
-</div>
-
-<div id="addModal" class="modal">
-
-
-<div class="modal-content">
-
-
-<h2>Add Asset</h2>
-
-
-<form id="addAssetForm">
-
-<input 
-id="assetName"
-placeholder="Asset Name"
-required
->
-
-
-<select id="assetCategory" required>
-
-<option value="">
-Select Category
-</option>
-
-<option value="Monitor">
-Monitor
-</option>
-
-<option value="Laptop">
-Laptop
-</option>
-
-<option value="Keyboard">
-Keyboard
-</option>
-
-<option value="Mouse">
-Mouse
-</option>
-
-<option value="Cable">
-Cable
-</option>
-
-<option value="Adapter">
-Adapter
-</option>
-
-<option value="Docking Station">
-Docking Station
-</option>
-
-<option value="Headset">
-Headset
-</option>
-
-<option value="iPhone Case">
-iPhone Case
-</option>
-
-<option value="iPad Case">
-iPad Case
-</option>
-
-<option value="Other">
-Other
-</option>
-
-</select>
-
-
-<input 
-id="assetQuantity"
-type="text"
-placeholder="Quantity"
-min="1"
-required
-onkeypress="return event.charCode >= 48 && event.charCode <= 57"
-oninput="this.value = this.value.replace(/[^0-9]/g, '')"
->
-
-
-<input 
-id="assetDescription"
-placeholder="Description"
->
-
-
-
-<button type="submit">
-Save
-</button>
-
-
-<button type="button" class="cancel" onclick="closeAddModal()">
-Cancel
-</button>
-
-</form>
-
-
-</div>
-
-</div>
-
+<!-- Remove quantity modal -->
 <div id="removeModal" class="modal">
     <div class="modal-content">
         <h2>Remove Quantity</h2>
-        <p>How many do you want to remove?</p>
-        <input 
-            id="removeQuantityInput" 
-            type="number" 
-            min="1" 
-            placeholder="Enter quantity"
-            onkeypress="return event.charCode >= 48 && event.charCode <= 57"
-            oninput="this.value = this.value.replace(/[^0-9]/g, '')"
-        >
-        <p id="removeReasonLabel">Reason for removal:</p>
-        <input 
-            id="removeReasonInput" 
-            type="text" 
-            placeholder="Enter reason"
-        >
+        <p id="removeModalInfo"></p>
+        <label for="removeQuantityInput">How many to remove?</label>
+        <input id="removeQuantityInput" type="number" min="1" placeholder="Enter quantity"
+               oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+        <label for="removeReasonInput">Reason for removal</label>
+        <input id="removeReasonInput" type="text" placeholder="e.g. Issued to new hire">
         <div class="modal-buttons">
             <button id="confirmRemoveButton">Remove</button>
             <button id="cancelRemoveButton" class="cancel">Cancel</button>
@@ -268,13 +132,25 @@ Cancel
     </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/config.js"></script>
-<script src="js/auth.js"></script>
-<script>requireAuth();</script>
-<script src="js/dashboard.js"></script>
+<!-- Delete asset modal -->
+<div id="deleteModal" class="modal">
+    <div class="modal-content">
+        <h2>Delete Asset</h2>
+        <p>Permanently delete <strong id="deleteAssetName"></strong> from inventory?</p>
+        <p class="danger-text">This cannot be undone. Past history entries are kept.</p>
+        <div class="modal-buttons">
+            <button class="btn-danger" id="confirmDeleteButton">Delete</button>
+            <button class="cancel" onclick="closeDeleteModal()">Cancel</button>
+        </div>
+    </div>
+</div>
 
+<div id="toasts"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/config.js?v=3"></script>
+<script src="js/auth.js?v=3"></script>
+<script src="js/dashboard.js?v=3"></script>
 
 </body>
-
 </html>
