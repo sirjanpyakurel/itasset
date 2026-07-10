@@ -135,8 +135,40 @@ button.secondary:hover { box-shadow: var(--shadow); }
 }
 .btn-edit:hover { box-shadow: var(--shadow); }
 
+.btn-update { background: var(--grad); }
+
 .row-actions { display: flex; gap: 8px; }
 .row-actions button { padding: 7px 14px; font-size: 13px; }
+
+/* Segmented add/remove toggle in the Update Stock modal */
+.seg-toggle {
+    display: flex;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 11px;
+    padding: 4px;
+    gap: 4px;
+    margin: 6px 0 4px;
+}
+
+.seg-toggle .seg {
+    flex: 1;
+    background: transparent;
+    color: var(--text-muted);
+    border-radius: 8px;
+    padding: 9px 10px;
+    font-size: 14px;
+    box-shadow: none;
+}
+.seg-toggle .seg:hover { transform: none; box-shadow: none; color: var(--text); }
+
+.seg-toggle .seg.active {
+    background: var(--surface);
+    color: var(--primary);
+    box-shadow: 0 1px 4px rgba(15, 23, 42, 0.12);
+    font-weight: 700;
+}
+#stockRemoveBtn.active { color: var(--danger); }
 
 /* ---------- Stat cards ---------- */
 

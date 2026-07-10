@@ -145,11 +145,11 @@ function renderTable() {
             <td>${badge}</td>
             <td class="row-actions">
                 <button class="btn-edit">Edit</button>
-                <button class="remove">Remove</button>
+                <button class="btn-update">Update</button>
             </td>`;
 
         tr.querySelector(".btn-edit").onclick = () => openEditModal(asset);
-        tr.querySelector(".remove").onclick = () => openRemoveModal(asset);
+        tr.querySelector(".btn-update").onclick = () => openStockModal(asset);
         table.appendChild(tr);
     });
 }
@@ -368,39 +368,62 @@ async function updateAsset({ name, category, reorder, description, user }) {
     loadAssets();
 }
 
-/* ---------- Remove quantity ---------- */
+/* ---------- Update stock (add or remove quantity) ---------- */
 
-function openRemoveModal(asset) {
-    currentRemoveAsset = asset;
-    document.getElementById("removeModalInfo").innerText =
-        `${asset.name} — ${asset.quantity} in stock`;
-    document.getElementById("removeQuantityInput").value = "";
-    document.getElementById("removeReasonInput").value = "";
-    document.getElementById("removeModal").style.display = "flex";
-    document.getElementById("removeQuantityInput").focus();
+let stockMode = "ADD"; // "ADD" | "REMOVE"
+
+function setStockMode(mode) {
+    stockMode = mode;
+    document.getElementById("stockAddBtn").classList.toggle("active", mode === "ADD");
+    document.getElementById("stockRemoveBtn").classList.toggle("active", mode === "REMOVE");
+    document.getElementById("confirmStockButton").innerText =
+        mode === "ADD" ? "Add Stock" : "Remove Stock";
+    document.getElementById("confirmStockButton").classList.toggle("btn-danger", mode === "REMOVE");
+    document.getElementById("stockReasonLabel").innerText =
+        mode === "ADD" ? "Reason (optional)" : "Reason (required)";
+    document.getElementById("stockReasonInput").placeholder =
+        mode === "ADD" ? "e.g. New shipment received" : "e.g. Issued to new hire";
 }
 
-function closeRemoveModal() {
-    document.getElementById("removeModal").style.display = "none";
+function openStockModal(asset) {
+    currentRemoveAsset = asset;
+    setStockMode("ADD");
+    document.getElementById("stockModalInfo").innerText =
+        `${asset.name} — ${asset.quantity} in stock`;
+    document.getElementById("stockQuantityInput").value = "";
+    document.getElementById("stockReasonInput").value = "";
+    document.getElementById("stockModal").style.display = "flex";
+    document.getElementById("stockQuantityInput").focus();
+}
+
+function closeStockModal() {
+    document.getElementById("stockModal").style.display = "none";
     currentRemoveAsset = null;
 }
 
-async function confirmRemove() {
+async function confirmStockUpdate() {
     if (!currentRemoveAsset) return;
 
-    const amount = parseInt(document.getElementById("removeQuantityInput").value, 10);
-    const reason = document.getElementById("removeReasonInput").value.trim();
+    const amount = parseInt(document.getElementById("stockQuantityInput").value, 10);
+    const reason = document.getElementById("stockReasonInput").value.trim();
 
     if (!amount || amount < 1) return toast("Enter a valid quantity", "error");
-    if (amount > currentRemoveAsset.quantity) return toast("Not enough stock", "error");
-    if (!reason) return toast("Reason is required", "error");
+
+    if (stockMode === "REMOVE") {
+        if (amount > currentRemoveAsset.quantity) return toast("Not enough stock", "error");
+        if (!reason) return toast("Reason is required when removing stock", "error");
+    }
 
     const user = await getSessionUser();
     if (!user) return;
 
+    const newQuantity = stockMode === "ADD"
+        ? currentRemoveAsset.quantity + amount
+        : currentRemoveAsset.quantity - amount;
+
     const { error } = await supabaseClient
         .from("assets")
-        .update({ quantity: currentRemoveAsset.quantity - amount })
+        .update({ quantity: newQuantity })
         .eq("id", currentRemoveAsset.id);
 
     if (error) return toast(error.message, "error");
@@ -408,15 +431,20 @@ async function confirmRemove() {
     await logHistory({
         asset_id: currentRemoveAsset.id,
         user_id: user.id,
-        action: "REMOVE",
+        action: stockMode,
         quantity: amount,
-        reason,
+        reason: reason || (stockMode === "ADD" ? "Restock" : "-"),
         done_by: emailPrefix(user)
     });
 
     const name = currentRemoveAsset.name;
-    closeRemoveModal();
-    toast(`Removed ${amount} × ${name}`, "success");
+    closeStockModal();
+    toast(
+        stockMode === "ADD"
+            ? `Added ${amount} × ${name} (now ${newQuantity})`
+            : `Removed ${amount} × ${name} (now ${newQuantity})`,
+        "success"
+    );
     loadAssets();
 }
 
@@ -508,8 +536,10 @@ async function initDashboard() {
         await saveAsset();
     });
 
-    document.getElementById("confirmRemoveButton").addEventListener("click", confirmRemove);
-    document.getElementById("cancelRemoveButton").addEventListener("click", closeRemoveModal);
+    document.getElementById("confirmStockButton").addEventListener("click", confirmStockUpdate);
+    document.getElementById("cancelStockButton").addEventListener("click", closeStockModal);
+    document.getElementById("stockAddBtn").addEventListener("click", () => setStockMode("ADD"));
+    document.getElementById("stockRemoveBtn").addEventListener("click", () => setStockMode("REMOVE"));
     document.getElementById("confirmDeleteButton").addEventListener("click", confirmDelete);
 
     // Close modals on backdrop click / Escape

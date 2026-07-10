@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>IT Inventory</title>
-<link rel="stylesheet" href="css/style.css?v=3">
+<link rel="stylesheet" href="css/style.css?v=4">
 </head>
 
 <body style="display: none;">
@@ -115,19 +115,23 @@
     </div>
 </div>
 
-<!-- Remove quantity modal -->
-<div id="removeModal" class="modal">
+<!-- Update stock modal (add or remove quantity) -->
+<div id="stockModal" class="modal">
     <div class="modal-content">
-        <h2>Remove Quantity</h2>
-        <p id="removeModalInfo"></p>
-        <label for="removeQuantityInput">How many to remove?</label>
-        <input id="removeQuantityInput" type="number" min="1" placeholder="Enter quantity"
+        <h2>Update Stock</h2>
+        <p id="stockModalInfo"></p>
+        <div class="seg-toggle">
+            <button type="button" id="stockAddBtn" class="seg active">+ Add Stock</button>
+            <button type="button" id="stockRemoveBtn" class="seg">− Remove Stock</button>
+        </div>
+        <label for="stockQuantityInput">Quantity</label>
+        <input id="stockQuantityInput" type="number" min="1" placeholder="Enter quantity"
                oninput="this.value = this.value.replace(/[^0-9]/g, '')">
-        <label for="removeReasonInput">Reason for removal</label>
-        <input id="removeReasonInput" type="text" placeholder="e.g. Issued to new hire">
+        <label for="stockReasonInput" id="stockReasonLabel">Reason (optional)</label>
+        <input id="stockReasonInput" type="text" placeholder="e.g. New shipment received">
         <div class="modal-buttons">
-            <button id="confirmRemoveButton">Remove</button>
-            <button id="cancelRemoveButton" class="cancel">Cancel</button>
+            <button id="confirmStockButton">Add Stock</button>
+            <button id="cancelStockButton" class="cancel">Cancel</button>
         </div>
     </div>
 </div>
@@ -148,9 +152,9 @@
 <div id="toasts"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/config.js?v=3"></script>
-<script src="js/auth.js?v=3"></script>
-<script src="js/dashboard.js?v=3"></script>
+<script src="js/config.js?v=4"></script>
+<script src="js/auth.js?v=4"></script>
+<script src="js/dashboard.js?v=4"></script>
 
 </body>
 </html>
