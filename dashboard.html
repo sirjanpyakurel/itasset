@@ -126,8 +126,9 @@
         <div class="seg-toggle">
             <button type="button" id="stockAddBtn" class="seg active">+ Add Stock</button>
             <button type="button" id="stockRemoveBtn" class="seg">− Remove Stock</button>
+            <button type="button" id="stockOrderBtn" class="seg">Order</button>
         </div>
-        <label for="stockQuantityInput">Quantity</label>
+        <label for="stockQuantityInput" id="stockQuantityLabel">Quantity</label>
         <input id="stockQuantityInput" type="number" min="1" placeholder="Enter quantity"
                oninput="this.value = this.value.replace(/[^0-9]/g, '')">
         <label for="stockReasonInput" id="stockReasonLabel">Reason (optional)</label>
@@ -135,6 +136,10 @@
         <div class="modal-buttons">
             <button id="confirmStockButton">Add Stock</button>
             <button id="cancelStockButton" class="cancel">Cancel</button>
+        </div>
+        <div id="pendingOrdersBox" style="display:none">
+            <h3>Pending Orders</h3>
+            <div id="pendingOrdersList"></div>
         </div>
     </div>
 </div>

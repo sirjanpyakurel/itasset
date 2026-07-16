@@ -23,7 +23,10 @@ const ACTION_BADGES = {
     ADD: '<span class="badge add">ADD</span>',
     REMOVE: '<span class="badge rem">REMOVE</span>',
     EDIT: '<span class="badge edit">EDIT</span>',
-    DELETE: '<span class="badge del">DELETE</span>'
+    DELETE: '<span class="badge del">DELETE</span>',
+    ORDER: '<span class="badge order">ORDER</span>',
+    DELIVER: '<span class="badge deliver">DELIVER</span>',
+    CANCEL: '<span class="badge cancel">CANCEL</span>'
 };
 
 function renderHistoryRow(row, index) {

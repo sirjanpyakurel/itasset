@@ -14,7 +14,7 @@
     <div class="header">
         <div>
             <h1>Inventory History</h1>
-            <p>Every add, removal and edit — who, when and why</p>
+            <p>Every add, removal, edit and order — who, when and why</p>
         </div>
         <div>
             <a href="dashboard.html"><button>Dashboard</button></a>
@@ -29,6 +29,9 @@
             <option value="REMOVE">Removed</option>
             <option value="EDIT">Edited</option>
             <option value="DELETE">Deleted</option>
+            <option value="ORDER">Ordered</option>
+            <option value="DELIVER">Delivered</option>
+            <option value="CANCEL">Order Cancelled</option>
         </select>
         <input id="dateFilter" type="date" onchange="loadHistory()">
         <span class="spacer"></span>

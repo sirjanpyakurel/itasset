@@ -169,6 +169,40 @@ button.secondary:hover { box-shadow: var(--shadow); }
     font-weight: 700;
 }
 #stockRemoveBtn.active { color: var(--danger); }
+#stockOrderBtn.active { color: #2563eb; }
+
+/* Pending orders list inside the Update Stock modal */
+#pendingOrdersBox { margin-top: 18px; }
+#pendingOrdersBox h3 {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin: 0 0 8px;
+}
+.pending-order-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+}
+.pending-order-row:last-child { border-bottom: none; }
+.pending-order-info { font-size: 13.5px; color: var(--text); }
+.pending-order-actions { display: flex; gap: 6px; flex-shrink: 0; }
+.pending-order-actions button { padding: 6px 12px; font-size: 12.5px; }
+.pending-empty { font-size: 13.5px; color: var(--text-muted); margin: 4px 0; }
+
+.btn-deliver { background: linear-gradient(135deg, #34d399 0%, #16a34a 100%); }
+.btn-deliver:hover { box-shadow: 0 6px 16px rgba(22, 163, 74, 0.3); }
+.btn-cancel-order {
+    background: var(--surface);
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+}
+.btn-cancel-order:hover { box-shadow: var(--shadow); }
 
 /* ---------- Stat cards ---------- */
 
@@ -288,6 +322,8 @@ table { width: 100%; border-collapse: collapse; min-width: 560px; }
 .asset-link { color: var(--primary); text-decoration: none; font-weight: 600; }
 .asset-link:hover { text-decoration: underline; }
 
+.pending-note { font-size: 12.5px; color: var(--text-muted); font-weight: 500; }
+
 th {
     background: var(--grad);
     padding: 14px 18px;
@@ -337,6 +373,10 @@ tr.out-of-stock:hover { background: #fee2e2; }
 .badge.rem { background: var(--danger-bg); color: var(--danger); }
 .badge.edit { background: #eef2ff; color: var(--primary); }
 .badge.del { background: #f1f5f9; color: var(--text-muted); }
+.badge.ordered { background: #eff6ff; color: #2563eb; }
+.badge.order { background: #eff6ff; color: #2563eb; }
+.badge.deliver { background: #ecfdf5; color: #059669; }
+.badge.cancel { background: var(--warning-bg); color: var(--warning); }
 
 /* ---------- Empty & loading states ---------- */
 

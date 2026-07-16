@@ -5,11 +5,12 @@
 const DEFAULT_REORDER_LEVEL = 5;
 
 let allAssets = [];
+let allOrders = []; // all pending (undelivered, uncancelled) orders
 let sortKey = "name";
 let sortDir = 1; // 1 asc, -1 desc
 let lowOnly = false;
 let editingAssetId = null;
-let currentRemoveAsset = null;
+let currentStockAsset = null;
 let deletingAsset = null;
 
 /* ---------- Toasts ---------- */
@@ -36,10 +37,26 @@ function isSafePurchaseUrl(url) {
     return typeof url === "string" && /^https?:\/\//i.test(url);
 }
 
+function ordersFor(assetId) {
+    return allOrders.filter(o => o.asset_id === assetId);
+}
+
+function pendingOrderQty(asset) {
+    return ordersFor(asset.id).reduce((sum, o) => sum + o.quantity, 0);
+}
+
+function effectiveQuantity(asset) {
+    return asset.quantity + pendingOrderQty(asset);
+}
+
+// Whether an asset still needs ordering once incoming (pending order) stock is counted
+function needsOrdering(asset) {
+    return effectiveQuantity(asset) < reorderLevel(asset);
+}
+
 function stockStatus(asset) {
-    if (asset.quantity === 0) return "out";
-    if (asset.quantity < reorderLevel(asset)) return "low";
-    return "ok";
+    if (!needsOrdering(asset)) return pendingOrderQty(asset) > 0 ? "ordered" : "ok";
+    return asset.quantity === 0 ? "out" : "low";
 }
 
 async function getSessionUser() {
@@ -63,7 +80,7 @@ async function logHistory(entry) {
 /* ---------- Rendering ---------- */
 
 function renderStats() {
-    const lowAssets = allAssets.filter(a => stockStatus(a) !== "ok");
+    const lowAssets = allAssets.filter(needsOrdering);
     document.getElementById("totalAssets").innerText = allAssets.length;
     document.getElementById("totalQuantity").innerText =
         allAssets.reduce((sum, a) => sum + a.quantity, 0);
@@ -90,7 +107,7 @@ function visibleAssets() {
     const category = document.getElementById("categoryFilter").value;
 
     let rows = allAssets.filter(a => {
-        if (lowOnly && stockStatus(a) === "ok") return false;
+        if (lowOnly && !needsOrdering(a)) return false;
         if (category && a.category !== category) return false;
         if (text && !`${a.name} ${a.category} ${a.description ?? ""}`.toLowerCase().includes(text)) return false;
         return true;
@@ -136,16 +153,24 @@ function renderTable() {
         if (status === "low") tr.className = "low-stock";
         if (status === "out") tr.className = "out-of-stock";
 
+        const pendingQty = pendingOrderQty(asset);
+
         const badge = status === "ok"
             ? '<span class="badge ok">In stock</span>'
-            : status === "low"
-                ? `<span class="badge low">Low · reorder at ${reorderLevel(asset)}</span>`
-                : '<span class="badge out">Out of stock</span>';
+            : status === "ordered"
+                ? `<span class="badge ordered">Ordered · ${pendingQty} incoming</span>`
+                : status === "low"
+                    ? `<span class="badge low">Low · reorder at ${reorderLevel(asset)}</span>`
+                    : '<span class="badge out">Out of stock</span>';
+
+        const quantityCell = pendingQty > 0
+            ? `<strong>${asset.quantity}</strong> + ${pendingQty} <span class="pending-note">(Ordered)</span>`
+            : `<strong>${asset.quantity}</strong>`;
 
         tr.innerHTML = `
             <td class="name-cell" title="${escapeHtml(asset.description)}"></td>
             <td>${escapeHtml(asset.category)}</td>
-            <td><strong>${asset.quantity}</strong></td>
+            <td>${quantityCell}</td>
             <td>${badge}</td>
             <td class="row-actions">
                 <button class="btn-edit">Edit</button>
@@ -207,19 +232,21 @@ function showSkeleton() {
 async function loadAssets() {
     showSkeleton();
 
-    const { data, error } = await supabaseClient
-        .from("assets")
-        .select("*")
-        .order("created_at", { ascending: false });
+    const [assetsRes, ordersRes] = await Promise.all([
+        supabaseClient.from("assets").select("*").order("created_at", { ascending: false }),
+        supabaseClient.from("orders").select("*").order("created_at", { ascending: true })
+    ]);
 
-    if (error) {
-        toast("Could not load inventory: " + error.message, "error");
+    if (assetsRes.error) {
+        toast("Could not load inventory: " + assetsRes.error.message, "error");
         document.getElementById("assetTable").innerHTML =
             '<tr class="state-row"><td colspan="5">Failed to load inventory.</td></tr>';
         return;
     }
 
-    allAssets = data;
+    allAssets = assetsRes.data;
+    // Graceful fallback if migration-v4.sql (orders table) hasn't been run yet
+    allOrders = ordersRes.error ? [] : ordersRes.data;
     renderAll();
 }
 
@@ -410,41 +437,79 @@ async function updateAsset({ name, category, reorder, description, purchaseUrl, 
     loadAssets();
 }
 
-/* ---------- Update stock (add or remove quantity) ---------- */
+/* ---------- Update stock (add, remove, or order quantity) ---------- */
 
-let stockMode = "ADD"; // "ADD" | "REMOVE"
+let stockMode = "ADD"; // "ADD" | "REMOVE" | "ORDER"
 
 function setStockMode(mode) {
     stockMode = mode;
     document.getElementById("stockAddBtn").classList.toggle("active", mode === "ADD");
     document.getElementById("stockRemoveBtn").classList.toggle("active", mode === "REMOVE");
+    document.getElementById("stockOrderBtn").classList.toggle("active", mode === "ORDER");
+
     document.getElementById("confirmStockButton").innerText =
-        mode === "ADD" ? "Add Stock" : "Remove Stock";
+        mode === "ADD" ? "Add Stock" : mode === "REMOVE" ? "Remove Stock" : "Place Order";
     document.getElementById("confirmStockButton").classList.toggle("btn-danger", mode === "REMOVE");
+
+    document.getElementById("stockQuantityLabel").innerText =
+        mode === "ORDER" ? "Quantity to order" : "Quantity";
     document.getElementById("stockReasonLabel").innerText =
-        mode === "ADD" ? "Reason (optional)" : "Reason (required)";
+        mode === "REMOVE" ? "Reason (required)" : "Reason (optional)";
     document.getElementById("stockReasonInput").placeholder =
-        mode === "ADD" ? "e.g. New shipment received" : "e.g. Issued to new hire";
+        mode === "ADD" ? "e.g. New shipment received"
+            : mode === "REMOVE" ? "e.g. Issued to new hire"
+                : "e.g. Ordered from Amazon";
+
+    document.getElementById("pendingOrdersBox").style.display = mode === "ORDER" ? "block" : "none";
+    if (mode === "ORDER") renderPendingOrders();
 }
 
 function openStockModal(asset) {
-    currentRemoveAsset = asset;
-    setStockMode("ADD");
-    document.getElementById("stockModalInfo").innerText =
-        `${asset.name} — ${asset.quantity} in stock`;
+    currentStockAsset = asset;
+    const pending = pendingOrderQty(asset);
+    document.getElementById("stockModalInfo").innerText = pending > 0
+        ? `${asset.name} — ${asset.quantity} in stock (+${pending} on order)`
+        : `${asset.name} — ${asset.quantity} in stock`;
     document.getElementById("stockQuantityInput").value = "";
     document.getElementById("stockReasonInput").value = "";
+    setStockMode(pending > 0 ? "ORDER" : "ADD");
     document.getElementById("stockModal").style.display = "flex";
     document.getElementById("stockQuantityInput").focus();
 }
 
 function closeStockModal() {
     document.getElementById("stockModal").style.display = "none";
-    currentRemoveAsset = null;
+    currentStockAsset = null;
+}
+
+function renderPendingOrders() {
+    const box = document.getElementById("pendingOrdersList");
+    box.innerHTML = "";
+    if (!currentStockAsset) return;
+
+    const orders = ordersFor(currentStockAsset.id);
+    if (orders.length === 0) {
+        box.innerHTML = '<p class="pending-empty">No pending orders.</p>';
+        return;
+    }
+
+    orders.forEach(order => {
+        const row = document.createElement("div");
+        row.className = "pending-order-row";
+        row.innerHTML = `
+            <span class="pending-order-info">${order.quantity} units — ${escapeHtml(order.reason || "No reason given")}</span>
+            <span class="pending-order-actions">
+                <button type="button" class="btn-deliver">Delivered</button>
+                <button type="button" class="btn-cancel-order">Cancel</button>
+            </span>`;
+        row.querySelector(".btn-deliver").onclick = () => deliverOrder(order);
+        row.querySelector(".btn-cancel-order").onclick = () => cancelOrder(order);
+        box.appendChild(row);
+    });
 }
 
 async function confirmStockUpdate() {
-    if (!currentRemoveAsset) return;
+    if (!currentStockAsset) return;
 
     const amount = parseInt(document.getElementById("stockQuantityInput").value, 10);
     const reason = document.getElementById("stockReasonInput").value.trim();
@@ -452,26 +517,56 @@ async function confirmStockUpdate() {
     if (!amount || amount < 1) return toast("Enter a valid quantity", "error");
 
     if (stockMode === "REMOVE") {
-        if (amount > currentRemoveAsset.quantity) return toast("Not enough stock", "error");
+        if (amount > currentStockAsset.quantity) return toast("Not enough stock", "error");
         if (!reason) return toast("Reason is required when removing stock", "error");
     }
 
     const user = await getSessionUser();
     if (!user) return;
 
+    if (stockMode === "ORDER") {
+        const { error } = await supabaseClient.from("orders").insert({
+            asset_id: currentStockAsset.id,
+            quantity: amount,
+            reason: reason || null,
+            created_by: user.id
+        });
+
+        if (error) {
+            return toast(/relation .*orders.* does not exist/i.test(error.message)
+                ? "Run supabase/migration-v4.sql to enable ordering"
+                : error.message, "error");
+        }
+
+        await logHistory({
+            asset_id: currentStockAsset.id,
+            user_id: user.id,
+            action: "ORDER",
+            quantity: amount,
+            reason: reason || "Order placed",
+            done_by: emailPrefix(user)
+        });
+
+        const name = currentStockAsset.name;
+        closeStockModal();
+        toast(`Ordered ${amount} × ${name}`, "success");
+        loadAssets();
+        return;
+    }
+
     const newQuantity = stockMode === "ADD"
-        ? currentRemoveAsset.quantity + amount
-        : currentRemoveAsset.quantity - amount;
+        ? currentStockAsset.quantity + amount
+        : currentStockAsset.quantity - amount;
 
     const { error } = await supabaseClient
         .from("assets")
         .update({ quantity: newQuantity })
-        .eq("id", currentRemoveAsset.id);
+        .eq("id", currentStockAsset.id);
 
     if (error) return toast(error.message, "error");
 
     await logHistory({
-        asset_id: currentRemoveAsset.id,
+        asset_id: currentStockAsset.id,
         user_id: user.id,
         action: stockMode,
         quantity: amount,
@@ -479,7 +574,7 @@ async function confirmStockUpdate() {
         done_by: emailPrefix(user)
     });
 
-    const name = currentRemoveAsset.name;
+    const name = currentStockAsset.name;
     closeStockModal();
     toast(
         stockMode === "ADD"
@@ -487,6 +582,62 @@ async function confirmStockUpdate() {
             : `Removed ${amount} × ${name} (now ${newQuantity})`,
         "success"
     );
+    loadAssets();
+}
+
+async function deliverOrder(order) {
+    const user = await getSessionUser();
+    if (!user) return;
+
+    const asset = allAssets.find(a => a.id === order.asset_id);
+    if (!asset) return;
+
+    const newQuantity = asset.quantity + order.quantity;
+
+    const { error: updateError } = await supabaseClient
+        .from("assets")
+        .update({ quantity: newQuantity })
+        .eq("id", asset.id);
+
+    if (updateError) return toast(updateError.message, "error");
+
+    const { error: deleteError } = await supabaseClient.from("orders").delete().eq("id", order.id);
+    if (deleteError) return toast(deleteError.message, "error");
+
+    await logHistory({
+        asset_id: asset.id,
+        user_id: user.id,
+        action: "DELIVER",
+        quantity: order.quantity,
+        reason: order.reason || "Order delivered",
+        done_by: emailPrefix(user)
+    });
+
+    closeStockModal();
+    toast(`Delivered ${order.quantity} × ${asset.name} (now ${newQuantity})`, "success");
+    loadAssets();
+}
+
+async function cancelOrder(order) {
+    const user = await getSessionUser();
+    if (!user) return;
+
+    const asset = allAssets.find(a => a.id === order.asset_id);
+
+    const { error } = await supabaseClient.from("orders").delete().eq("id", order.id);
+    if (error) return toast(error.message, "error");
+
+    await logHistory({
+        asset_id: order.asset_id,
+        user_id: user.id,
+        action: "CANCEL",
+        quantity: order.quantity,
+        reason: order.reason ? `Order cancelled: ${order.reason}` : "Order cancelled",
+        done_by: emailPrefix(user)
+    });
+
+    closeStockModal();
+    toast(`Cancelled order for ${asset ? asset.name : "asset"}`, "info");
     loadAssets();
 }
 
@@ -535,7 +686,7 @@ async function confirmDelete() {
 
 function exportReorderList() {
     const low = allAssets
-        .filter(a => stockStatus(a) !== "ok")
+        .filter(needsOrdering)
         .sort((a, b) => a.category.localeCompare(b.category) || a.name.localeCompare(b.name));
 
     if (low.length === 0) {
@@ -548,7 +699,7 @@ function exportReorderList() {
         ["Name", "Category", "In Stock", "Alert Level", "Suggested Order"].map(esc).join(","),
         ...low.map(a => [
             a.name, a.category, a.quantity, reorderLevel(a),
-            Math.max(reorderLevel(a) * 2 - a.quantity, 1)
+            Math.max(reorderLevel(a) * 2 - effectiveQuantity(a), 1)
         ].map(esc).join(","))
     ];
 
@@ -582,6 +733,7 @@ async function initDashboard() {
     document.getElementById("cancelStockButton").addEventListener("click", closeStockModal);
     document.getElementById("stockAddBtn").addEventListener("click", () => setStockMode("ADD"));
     document.getElementById("stockRemoveBtn").addEventListener("click", () => setStockMode("REMOVE"));
+    document.getElementById("stockOrderBtn").addEventListener("click", () => setStockMode("ORDER"));
     document.getElementById("confirmDeleteButton").addEventListener("click", confirmDelete);
 
     // Close modals on backdrop click / Escape
