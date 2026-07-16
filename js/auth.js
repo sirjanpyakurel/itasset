@@ -45,6 +45,7 @@ async function requireAuth() {
 
         // Show body only if authenticated
         document.body.style.display = "block";
+        startIdleTimer();
         return true;
     } catch (error) {
         clearTimeout(timeoutId); // Clear timeout on error
@@ -54,6 +55,28 @@ async function requireAuth() {
         window.location.replace("index.html");
         return false;
     }
+}
+
+/* ---------- Auto sign-out on inactivity ---------- */
+
+const IDLE_TIMEOUT_MS = 25 * 60 * 1000;
+let idleTimer = null;
+
+function resetIdleTimer() {
+    clearTimeout(idleTimer);
+    idleTimer = setTimeout(handleIdleSignOut, IDLE_TIMEOUT_MS);
+}
+
+async function handleIdleSignOut() {
+    await supabaseClient.auth.signOut();
+    window.location.href = "index.html?timeout=1";
+}
+
+function startIdleTimer() {
+    ["mousemove", "mousedown", "keydown", "scroll", "touchstart"].forEach(evt =>
+        document.addEventListener(evt, resetIdleTimer)
+    );
+    resetIdleTimer();
 }
 
 function setupLoginForm() {
