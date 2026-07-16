@@ -32,6 +32,10 @@ function reorderLevel(asset) {
     return asset.reorder_level ?? DEFAULT_REORDER_LEVEL;
 }
 
+function isSafePurchaseUrl(url) {
+    return typeof url === "string" && /^https?:\/\//i.test(url);
+}
+
 function stockStatus(asset) {
     if (asset.quantity === 0) return "out";
     if (asset.quantity < reorderLevel(asset)) return "low";
@@ -139,7 +143,7 @@ function renderTable() {
                 : '<span class="badge out">Out of stock</span>';
 
         tr.innerHTML = `
-            <td title="${escapeHtml(asset.description)}">${escapeHtml(asset.name)}</td>
+            <td class="name-cell" title="${escapeHtml(asset.description)}"></td>
             <td>${escapeHtml(asset.category)}</td>
             <td><strong>${asset.quantity}</strong></td>
             <td>${badge}</td>
@@ -147,6 +151,21 @@ function renderTable() {
                 <button class="btn-edit">Edit</button>
                 <button class="btn-update">Update</button>
             </td>`;
+
+        const nameCell = tr.querySelector(".name-cell");
+        if (isSafePurchaseUrl(asset.purchase_url)) {
+            const link = document.createElement("a");
+            link.href = asset.purchase_url;
+            link.target = "_blank";
+            link.rel = "noopener noreferrer";
+            link.className = "asset-link";
+            link.title = "Open purchase link";
+            link.textContent = asset.name;
+            link.onclick = e => e.stopPropagation();
+            nameCell.appendChild(link);
+        } else {
+            nameCell.textContent = asset.name;
+        }
 
         tr.querySelector(".btn-edit").onclick = () => openEditModal(asset);
         tr.querySelector(".btn-update").onclick = () => openStockModal(asset);
@@ -229,6 +248,7 @@ function openEditModal(asset) {
     document.getElementById("assetQuantityLabel").innerText = "Quantity (use Remove / Add Stock to change)";
     document.getElementById("assetReorderLevel").value = reorderLevel(asset);
     document.getElementById("assetDescription").value = asset.description ?? "";
+    document.getElementById("assetPurchaseUrl").value = asset.purchase_url ?? "";
     const delRow = document.getElementById("deleteAssetRow");
     delRow.style.display = "flex";
     document.getElementById("deleteAssetBtn").onclick = () => {
@@ -251,9 +271,15 @@ async function saveAsset() {
     const quantity = parseInt(document.getElementById("assetQuantity").value, 10);
     const reorder = parseInt(document.getElementById("assetReorderLevel").value, 10);
     const description = document.getElementById("assetDescription").value.trim();
+    const purchaseUrl = document.getElementById("assetPurchaseUrl").value.trim();
 
     if (!name || !category || Number.isNaN(quantity) || quantity < 0) {
         toast("Please fill all fields with valid values", "error");
+        return;
+    }
+
+    if (purchaseUrl && !/^https?:\/\//i.test(purchaseUrl)) {
+        toast("Purchase URL must start with http:// or https://", "error");
         return;
     }
 
@@ -265,16 +291,16 @@ async function saveAsset() {
 
     try {
         if (editingAssetId === null) {
-            await createAsset({ name, category, quantity, reorder, description, user });
+            await createAsset({ name, category, quantity, reorder, description, purchaseUrl, user });
         } else {
-            await updateAsset({ name, category, reorder, description, user });
+            await updateAsset({ name, category, reorder, description, purchaseUrl, user });
         }
     } finally {
         saveBtn.disabled = false;
     }
 }
 
-async function createAsset({ name, category, quantity, reorder, description, user }) {
+async function createAsset({ name, category, quantity, reorder, description, purchaseUrl, user }) {
     const duplicate = allAssets.some(a => a.name.toLowerCase() === name.toLowerCase());
     if (duplicate) {
         toast("An asset with this name already exists", "error");
@@ -284,16 +310,23 @@ async function createAsset({ name, category, quantity, reorder, description, use
     const payload = {
         name, category, quantity, description,
         created_by: user.id,
-        reorder_level: Number.isNaN(reorder) ? DEFAULT_REORDER_LEVEL : reorder
+        reorder_level: Number.isNaN(reorder) ? DEFAULT_REORDER_LEVEL : reorder,
+        purchase_url: purchaseUrl || null
     };
 
     let { data, error } = await supabaseClient.from("assets").insert(payload).select().single();
 
-    // Graceful fallback if migration-v2.sql hasn't been run yet
+    // Graceful fallback if migration-v2.sql / migration-v3.sql hasn't been run yet
     if (error && /reorder_level/.test(error.message)) {
         delete payload.reorder_level;
         ({ data, error } = await supabaseClient.from("assets").insert(payload).select().single());
         if (!error) toast("Tip: run supabase/migration-v2.sql to enable per-item thresholds", "info");
+    }
+
+    if (error && /purchase_url/.test(error.message)) {
+        delete payload.purchase_url;
+        ({ data, error } = await supabaseClient.from("assets").insert(payload).select().single());
+        if (!error) toast("Tip: run supabase/migration-v3.sql to enable purchase links", "info");
     }
 
     if (error) {
@@ -315,7 +348,7 @@ async function createAsset({ name, category, quantity, reorder, description, use
     loadAssets();
 }
 
-async function updateAsset({ name, category, reorder, description, user }) {
+async function updateAsset({ name, category, reorder, description, purchaseUrl, user }) {
     const original = allAssets.find(a => a.id === editingAssetId);
     if (!original) return;
 
@@ -328,7 +361,8 @@ async function updateAsset({ name, category, reorder, description, user }) {
 
     const payload = {
         name, category, description,
-        reorder_level: Number.isNaN(reorder) ? DEFAULT_REORDER_LEVEL : reorder
+        reorder_level: Number.isNaN(reorder) ? DEFAULT_REORDER_LEVEL : reorder,
+        purchase_url: purchaseUrl || null
     };
 
     let { error } = await supabaseClient.from("assets").update(payload).eq("id", editingAssetId);
@@ -337,6 +371,12 @@ async function updateAsset({ name, category, reorder, description, user }) {
         delete payload.reorder_level;
         ({ error } = await supabaseClient.from("assets").update(payload).eq("id", editingAssetId));
         if (!error) toast("Tip: run supabase/migration-v2.sql to enable per-item thresholds", "info");
+    }
+
+    if (error && /purchase_url/.test(error.message)) {
+        delete payload.purchase_url;
+        ({ error } = await supabaseClient.from("assets").update(payload).eq("id", editingAssetId));
+        if (!error) toast("Tip: run supabase/migration-v3.sql to enable purchase links", "info");
     }
 
     if (error) {
@@ -350,6 +390,8 @@ async function updateAsset({ name, category, reorder, description, user }) {
     if ((original.description ?? "") !== description) changes.push("description updated");
     if (reorderLevel(original) !== payload.reorder_level && payload.reorder_level !== undefined)
         changes.push(`alert level: ${reorderLevel(original)} → ${payload.reorder_level}`);
+    if ((original.purchase_url ?? "") !== (payload.purchase_url ?? "") && payload.purchase_url !== undefined)
+        changes.push("purchase link updated");
 
     if (changes.length > 0) {
         // 'EDIT' requires migration-v2.sql; fails quietly on old schema

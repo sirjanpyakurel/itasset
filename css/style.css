@@ -285,6 +285,9 @@ button.secondary:hover { box-shadow: var(--shadow); }
 
 table { width: 100%; border-collapse: collapse; min-width: 560px; }
 
+.asset-link { color: var(--primary); text-decoration: none; font-weight: 600; }
+.asset-link:hover { text-decoration: underline; }
+
 th {
     background: var(--grad);
     padding: 14px 18px;
