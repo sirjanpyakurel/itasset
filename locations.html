@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Locations — IT Inventory</title>
+<link rel="stylesheet" href="css/style.css?v=6">
+</head>
+
+<body style="display: none;">
+
+<div class="container">
+
+    <div class="header">
+        <div>
+            <h1>Locations</h1>
+            <p>Manage offices and who has access to each</p>
+        </div>
+        <div>
+            <a href="dashboard.html"><button class="secondary">Dashboard</button></a>
+            <button class="logout" onclick="logout()">Logout</button>
+        </div>
+    </div>
+
+    <div class="actions">
+        <span class="spacer"></span>
+        <button onclick="openAddLocationModal()">+ Add Location</button>
+    </div>
+
+    <div class="table-box">
+        <table>
+            <thead>
+                <tr>
+                    <th>Office</th>
+                    <th>Users</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="locationsTable"></tbody>
+        </table>
+    </div>
+
+    <div class="header" style="margin-top:32px;">
+        <div>
+            <h1 style="font-size:22px;">Users</h1>
+            <p>Assign each person to the office(s) they should see</p>
+        </div>
+    </div>
+
+    <div class="table-box">
+        <table>
+            <thead>
+                <tr>
+                    <th>User</th>
+                    <th>Role</th>
+                    <th>Offices</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="usersTable"></tbody>
+        </table>
+    </div>
+
+</div>
+
+<!-- Add / rename location modal -->
+<div id="locationModal" class="modal">
+    <div class="modal-content">
+        <h2 id="locationModalTitle">Add Location</h2>
+        <form id="locationForm">
+            <label for="locationName">Office name</label>
+            <input id="locationName" placeholder="e.g. Charlotte Office" required>
+            <div class="modal-buttons">
+                <button type="submit">Save</button>
+                <button type="button" class="cancel" onclick="closeAddLocationModal()">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Assign offices to a user modal -->
+<div id="assignModal" class="modal">
+    <div class="modal-content">
+        <h2>Assign Offices</h2>
+        <p id="assignModalInfo"></p>
+        <div id="assignCheckboxes"></div>
+        <div class="modal-buttons">
+            <button type="button" id="saveAssignmentsBtn">Save</button>
+            <button type="button" class="cancel" onclick="closeAssignModal()">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<div id="toasts"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/config.js?v=6"></script>
+<script src="js/auth.js?v=6"></script>
+<script src="js/locations.js?v=6"></script>
+
+</body>
+</html>

@@ -16,6 +16,53 @@ async function login() {
     window.location.href = "dashboard.html";
 }
 
+/* ---------- Shared user / role / location context ---------- */
+
+let currentUserProfile = null; // { role, email, full_name }
+let currentUserLocations = []; // locations this user is directly assigned to: [{ id, name }]
+let availableLocations = []; // locations the user can switch between (all of them, if admin)
+let activeLocationId = null; // the office whose inventory is currently shown
+
+async function getSessionUser() {
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if (!session || !session.user) {
+        window.location.href = "index.html";
+        return null;
+    }
+    return session.user;
+}
+
+function isAdmin() {
+    return currentUserProfile?.role === "admin";
+}
+
+async function loadUserContext(user) {
+    const [{ data: profile }, { data: memberships }] = await Promise.all([
+        supabaseClient.from("profiles").select("role, email, full_name").eq("id", user.id).single(),
+        supabaseClient.from("user_locations").select("locations(id, name)").eq("user_id", user.id)
+    ]);
+
+    currentUserProfile = profile ?? { role: "member", email: user.email, full_name: null };
+    currentUserLocations = (memberships ?? []).map(m => m.locations).filter(Boolean);
+
+    availableLocations = isAdmin() ? await loadAllLocations() : currentUserLocations;
+
+    const saved = localStorage.getItem("activeLocationId");
+    const savedStillValid = availableLocations.some(l => String(l.id) === saved);
+    activeLocationId = savedStillValid ? Number(saved) : (availableLocations[0]?.id ?? null);
+}
+
+async function loadAllLocations() {
+    const { data, error } = await supabaseClient.from("locations").select("*").order("name");
+    if (error) return [];
+    return data;
+}
+
+function setActiveLocation(id) {
+    activeLocationId = id;
+    localStorage.setItem("activeLocationId", String(id));
+}
+
 async function checkUser() {
     const { data: { session } } = await supabaseClient.auth.getSession();
 

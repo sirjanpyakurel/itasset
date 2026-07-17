@@ -59,15 +59,6 @@ function stockStatus(asset) {
     return asset.quantity === 0 ? "out" : "low";
 }
 
-async function getSessionUser() {
-    const { data: { session } } = await supabaseClient.auth.getSession();
-    if (!session || !session.user) {
-        window.location.href = "index.html";
-        return null;
-    }
-    return session.user;
-}
-
 function emailPrefix(user) {
     return user.email ? user.email.split("@")[0] : "Unknown";
 }
@@ -232,9 +223,18 @@ function showSkeleton() {
 async function loadAssets() {
     showSkeleton();
 
+    if (!activeLocationId) {
+        allAssets = [];
+        allOrders = [];
+        renderAll();
+        document.getElementById("assetTable").innerHTML =
+            '<tr class="state-row"><td colspan="5"><span class="emoji">🏢</span>You haven’t been assigned to an office yet. Ask your admin to add you to one.</td></tr>';
+        return;
+    }
+
     const [assetsRes, ordersRes] = await Promise.all([
-        supabaseClient.from("assets").select("*").order("created_at", { ascending: false }),
-        supabaseClient.from("orders").select("*").order("created_at", { ascending: true })
+        supabaseClient.from("assets").select("*").eq("location_id", activeLocationId).order("created_at", { ascending: false }),
+        supabaseClient.from("orders").select("*").eq("location_id", activeLocationId).order("created_at", { ascending: true })
     ]);
 
     if (assetsRes.error) {
@@ -337,6 +337,7 @@ async function createAsset({ name, category, quantity, reorder, description, pur
     const payload = {
         name, category, quantity, description,
         created_by: user.id,
+        location_id: activeLocationId,
         reorder_level: Number.isNaN(reorder) ? DEFAULT_REORDER_LEVEL : reorder,
         purchase_url: purchaseUrl || null
     };
@@ -364,6 +365,7 @@ async function createAsset({ name, category, quantity, reorder, description, pur
     await logHistory({
         asset_id: data.id,
         user_id: user.id,
+        location_id: data.location_id,
         action: "ADD",
         quantity,
         reason: description || "New asset",
@@ -425,6 +427,7 @@ async function updateAsset({ name, category, reorder, description, purchaseUrl, 
         await logHistory({
             asset_id: editingAssetId,
             user_id: user.id,
+            location_id: original.location_id,
             action: "EDIT",
             quantity: original.quantity || 1,
             reason: changes.join("; "),
@@ -527,6 +530,7 @@ async function confirmStockUpdate() {
     if (stockMode === "ORDER") {
         const { error } = await supabaseClient.from("orders").insert({
             asset_id: currentStockAsset.id,
+            location_id: currentStockAsset.location_id,
             quantity: amount,
             reason: reason || null,
             created_by: user.id
@@ -541,6 +545,7 @@ async function confirmStockUpdate() {
         await logHistory({
             asset_id: currentStockAsset.id,
             user_id: user.id,
+            location_id: currentStockAsset.location_id,
             action: "ORDER",
             quantity: amount,
             reason: reason || "Order placed",
@@ -568,6 +573,7 @@ async function confirmStockUpdate() {
     await logHistory({
         asset_id: currentStockAsset.id,
         user_id: user.id,
+        location_id: currentStockAsset.location_id,
         action: stockMode,
         quantity: amount,
         reason: reason || (stockMode === "ADD" ? "Restock" : "-"),
@@ -607,6 +613,7 @@ async function deliverOrder(order) {
     await logHistory({
         asset_id: asset.id,
         user_id: user.id,
+        location_id: order.location_id,
         action: "DELIVER",
         quantity: order.quantity,
         reason: order.reason || "Order delivered",
@@ -630,6 +637,7 @@ async function cancelOrder(order) {
     await logHistory({
         asset_id: order.asset_id,
         user_id: user.id,
+        location_id: order.location_id,
         action: "CANCEL",
         quantity: order.quantity,
         reason: order.reason ? `Order cancelled: ${order.reason}` : "Order cancelled",
@@ -664,6 +672,7 @@ async function confirmDelete() {
     await logHistory({
         asset_id: deletingAsset.id,
         user_id: user.id,
+        location_id: deletingAsset.location_id,
         action: "DELETE",
         quantity: deletingAsset.quantity || 1,
         reason: `Deleted asset “${deletingAsset.name}” (${deletingAsset.category})`,
@@ -712,6 +721,39 @@ function exportReorderList() {
     toast(`Exported ${low.length} item${low.length > 1 ? "s" : ""} to order`, "success");
 }
 
+/* ---------- Location switcher ---------- */
+
+function initLocationSwitcher() {
+    const switcher = document.getElementById("locationSwitcher");
+    const navBtn = document.getElementById("locationsNavBtn");
+
+    navBtn.style.display = isAdmin() ? "inline-flex" : "none";
+
+    if (availableLocations.length > 1) {
+        switcher.innerHTML = availableLocations
+            .map(loc => `<option value="${loc.id}"${loc.id === activeLocationId ? " selected" : ""}>${escapeHtml(loc.name)}</option>`)
+            .join("");
+        switcher.style.display = "block";
+    } else {
+        switcher.style.display = "none";
+    }
+
+    updateSubtitle();
+}
+
+function updateSubtitle() {
+    const activeLoc = availableLocations.find(l => l.id === activeLocationId);
+    document.getElementById("subtitle").textContent = activeLoc
+        ? `Storage Management System — ${activeLoc.name}`
+        : "Storage Management System";
+}
+
+function switchLocation(idStr) {
+    setActiveLocation(Number(idStr));
+    updateSubtitle();
+    loadAssets();
+}
+
 /* ---------- Misc ---------- */
 
 async function logout() {
@@ -723,6 +765,11 @@ async function logout() {
 
 async function initDashboard() {
     if (!(await requireAuth())) return;
+
+    const user = await getSessionUser();
+    if (!user) return;
+    await loadUserContext(user);
+    initLocationSwitcher();
 
     document.getElementById("assetForm").addEventListener("submit", async e => {
         e.preventDefault();

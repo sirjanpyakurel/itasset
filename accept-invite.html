@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Accept Invite — IT Inventory</title>
+    <link rel="stylesheet" href="css/style.css?v=6">
+</head>
+
+<body class="login-page">
+
+<div class="login-box">
+
+    <h2>IT Inventory</h2>
+    <h3>Set your password to finish joining</h3>
+
+    <form id="acceptInviteForm">
+
+    <input
+        id="newPassword"
+        type="password"
+        placeholder="New password"
+        minlength="6"
+        required
+    >
+
+    <input
+        id="confirmPassword"
+        type="password"
+        placeholder="Confirm password"
+        minlength="6"
+        required
+    >
+
+    <button type="submit">
+        Set Password &amp; Continue
+    </button>
+
+    </form>
+
+    <p id="message"></p>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/config.js?v=6"></script>
+<script src="js/accept-invite.js?v=6"></script>
+
+</body>
+</html>

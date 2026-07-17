@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>History — IT Inventory</title>
-<link rel="stylesheet" href="css/style.css?v=5">
+<link rel="stylesheet" href="css/style.css?v=6">
 </head>
 
 <body style="display: none;">
@@ -17,6 +17,7 @@
             <p>Every add, removal, edit and order — who, when and why</p>
         </div>
         <div>
+            <a href="locations.html"><button class="secondary" id="locationsNavBtn" style="display:none">Locations</button></a>
             <a href="dashboard.html"><button>Dashboard</button></a>
         </div>
     </div>
@@ -33,6 +34,9 @@
             <option value="DELIVER">Delivered</option>
             <option value="CANCEL">Order Cancelled</option>
         </select>
+        <select id="locationFilter" onchange="loadHistory()" style="display:none">
+            <option value="">All Locations</option>
+        </select>
         <input id="dateFilter" type="date" onchange="loadHistory()">
         <span class="spacer"></span>
         <button class="secondary" onclick="clearFilters()">Clear</button>
@@ -46,6 +50,7 @@
                     <th>No.</th>
                     <th>Date</th>
                     <th>Asset</th>
+                    <th>Location</th>
                     <th>Action</th>
                     <th>Quantity</th>
                     <th>Done By</th>
@@ -61,9 +66,9 @@
 <div id="toasts"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/config.js?v=5"></script>
-<script src="js/auth.js?v=5"></script>
-<script src="js/history.js?v=5"></script>
+<script src="js/config.js?v=6"></script>
+<script src="js/auth.js?v=6"></script>
+<script src="js/history.js?v=6"></script>
 
 </body>
 </html>

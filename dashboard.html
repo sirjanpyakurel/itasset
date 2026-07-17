@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>IT Inventory</title>
-<link rel="stylesheet" href="css/style.css?v=5">
+<link rel="stylesheet" href="css/style.css?v=6">
 </head>
 
 <body style="display: none;">
@@ -14,9 +14,11 @@
     <div class="header">
         <div>
             <h1 onclick="window.location.reload()">IT Inventory</h1>
-            <p>Storage Management System</p>
+            <p id="subtitle">Storage Management System</p>
         </div>
         <div>
+            <select id="locationSwitcher" onchange="switchLocation(this.value)" style="display:none"></select>
+            <a href="locations.html"><button class="secondary" id="locationsNavBtn" style="display:none">Locations</button></a>
             <a href="history.html"><button class="history-btn">History</button></a>
             <button class="logout" onclick="logout()">Logout</button>
         </div>
@@ -160,9 +162,9 @@
 <div id="toasts"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/config.js?v=5"></script>
-<script src="js/auth.js?v=5"></script>
-<script src="js/dashboard.js?v=5"></script>
+<script src="js/config.js?v=6"></script>
+<script src="js/auth.js?v=6"></script>
+<script src="js/dashboard.js?v=6"></script>
 
 </body>
 </html>

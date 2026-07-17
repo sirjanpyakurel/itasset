@@ -37,6 +37,7 @@ function renderHistoryRow(row, index) {
         index,
         `${date.toLocaleDateString()} ${date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`,
         row.assets?.name ?? "Deleted asset",
+        row.locations?.name ?? "-",
         null, // action badge (HTML)
         row.quantity,
         row.done_by ?? "Unknown",
@@ -45,7 +46,7 @@ function renderHistoryRow(row, index) {
 
     cells.forEach((value, i) => {
         const td = document.createElement("td");
-        if (i === 3) td.innerHTML = ACTION_BADGES[row.action] ?? row.action;
+        if (i === 4) td.innerHTML = ACTION_BADGES[row.action] ?? row.action;
         else td.textContent = value;
         tr.appendChild(td);
     });
@@ -58,19 +59,21 @@ function renderHistoryRow(row, index) {
 async function loadHistory() {
     const table = document.getElementById("historyTable");
     table.innerHTML = Array.from({ length: 5 }, () =>
-        `<tr class="skeleton">${'<td><div class="bar"></div></td>'.repeat(7)}</tr>`
+        `<tr class="skeleton">${'<td><div class="bar"></div></td>'.repeat(8)}</tr>`
     ).join("");
 
     const action = document.getElementById("filter").value;
+    const location = document.getElementById("locationFilter").value;
     const dateFilter = document.getElementById("dateFilter").value;
 
     let query = supabaseClient
         .from("history")
-        .select("*, assets(name)")
+        .select("*, assets(name), locations(name)")
         .order("created_at", { ascending: false })
         .limit(HISTORY_LIMIT);
 
     if (action !== "ALL") query = query.eq("action", action);
+    if (location) query = query.eq("location_id", Number(location));
 
     if (dateFilter) {
         // Local calendar day -> UTC range, filtered server-side
@@ -84,7 +87,7 @@ async function loadHistory() {
 
     if (error) {
         toast("Could not load history: " + error.message, "error");
-        table.innerHTML = '<tr class="state-row"><td colspan="7">Failed to load history.</td></tr>';
+        table.innerHTML = '<tr class="state-row"><td colspan="8">Failed to load history.</td></tr>';
         return;
     }
 
@@ -110,7 +113,7 @@ function renderHistory() {
     const rows = visibleRows();
 
     if (rows.length === 0) {
-        table.innerHTML = `<tr class="state-row"><td colspan="7"><span class="emoji">🗂️</span>${
+        table.innerHTML = `<tr class="state-row"><td colspan="8"><span class="emoji">🗂️</span>${
             historyRows.length === 0 ? "No history for the selected filters." : "No rows match your search."
         }</td></tr>`;
         return;
@@ -122,6 +125,7 @@ function renderHistory() {
 function clearFilters() {
     document.getElementById("historySearch").value = "";
     document.getElementById("filter").value = "ALL";
+    document.getElementById("locationFilter").value = "";
     document.getElementById("dateFilter").value = "";
     loadHistory();
 }
@@ -134,12 +138,13 @@ function exportHistoryCsv() {
 
     const esc = v => `"${String(v ?? "").replace(/"/g, '""')}"`;
     const lines = [
-        ["Date", "Time", "Asset", "Action", "Quantity", "Done By", "Reason"].map(esc).join(","),
+        ["Date", "Time", "Asset", "Location", "Action", "Quantity", "Done By", "Reason"].map(esc).join(","),
         ...rows.map(r => {
             const d = new Date(r.created_at);
             return [
                 d.toLocaleDateString(), d.toLocaleTimeString(),
                 r.assets?.name ?? "Deleted asset",
+                r.locations?.name ?? "-",
                 r.action, r.quantity, r.done_by ?? "Unknown", r.reason ?? "-"
             ].map(esc).join(",");
         })
@@ -154,10 +159,30 @@ function exportHistoryCsv() {
     toast(`Exported ${rows.length} entries`, "success");
 }
 
+function escapeHtml(str) {
+    const div = document.createElement("div");
+    div.textContent = str ?? "";
+    return div.innerHTML;
+}
+
 /* ---------- Init ---------- */
 
 async function initHistory() {
     if (!(await requireAuth())) return;
+
+    const user = await getSessionUser();
+    if (!user) return;
+    await loadUserContext(user);
+
+    document.getElementById("locationsNavBtn").style.display = isAdmin() ? "inline-flex" : "none";
+
+    const locationFilter = document.getElementById("locationFilter");
+    if (availableLocations.length > 1) {
+        locationFilter.innerHTML = '<option value="">All Locations</option>' +
+            availableLocations.map(loc => `<option value="${loc.id}">${escapeHtml(loc.name)}</option>`).join("");
+        locationFilter.style.display = "block";
+    }
+
     loadHistory();
 }
 
