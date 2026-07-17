@@ -729,6 +729,10 @@ function initLocationSwitcher() {
 
     navBtn.style.display = isAdmin() ? "inline-flex" : "none";
 
+    const addBtn = document.getElementById("addAssetBtn");
+    addBtn.disabled = !activeLocationId;
+    addBtn.title = activeLocationId ? "" : "You haven't been assigned to an office yet";
+
     if (availableLocations.length > 1) {
         switcher.innerHTML = availableLocations
             .map(loc => `<option value="${loc.id}"${loc.id === activeLocationId ? " selected" : ""}>${escapeHtml(loc.name)}</option>`)

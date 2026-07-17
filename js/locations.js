@@ -59,6 +59,16 @@ async function loadLocationsAndUsers() {
         return;
     }
 
+    if (userLocRes.error) {
+        toast("Could not load location memberships: " + userLocRes.error.message, "error");
+        return;
+    }
+
+    if (profilesRes.error) {
+        toast("Could not load users: " + profilesRes.error.message, "error");
+        return;
+    }
+
     allLocations = locRes.data ?? [];
     allMemberships = userLocRes.data ?? [];
     allProfiles = profilesRes.data ?? [];

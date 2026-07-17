@@ -183,6 +183,12 @@ async function initHistory() {
         locationFilter.style.display = "block";
     }
 
+    if (!isAdmin() && availableLocations.length === 0) {
+        document.getElementById("historyTable").innerHTML =
+            '<tr class="state-row"><td colspan="8"><span class="emoji">🏢</span>You haven’t been assigned to an office yet. Ask your admin to add you to one.</td></tr>';
+        return;
+    }
+
     loadHistory();
 }
 

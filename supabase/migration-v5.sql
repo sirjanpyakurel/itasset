@@ -116,45 +116,66 @@ as $$
     );
 $$;
 
--- 8. RLS: locations ------------------------------------------------------
+-- 8. RLS: drop every existing policy on these tables first, by whatever
+--    name it actually has. Some of these tables already had policies from
+--    an earlier experiment under slightly different names (e.g. "...can
+--    VIEW assets" instead of "...can READ assets"), which a plain
+--    `drop policy if exists "<expected name>"` silently fails to match —
+--    leaving the old, unrestricted policy active side-by-side with the
+--    new one. Since Postgres OR-combines multiple permissive policies for
+--    the same command, that old policy alone made every row visible to
+--    everyone regardless of the new, restrictive policy. Dropping by
+--    querying pg_policies (not by a hardcoded name) closes that gap for
+--    good and makes this migration safe to re-run no matter what's there.
 
 alter table public.locations enable row level security;
+alter table public.user_locations enable row level security;
 
-drop policy if exists "Authenticated users can read locations" on public.locations;
+do $$
+declare
+    pol record;
+begin
+    for pol in
+        select policyname, tablename from pg_policies
+        where schemaname = 'public'
+          and tablename in ('assets', 'history', 'orders', 'profiles', 'locations', 'user_locations')
+    loop
+        execute format('drop policy if exists %I on public.%I', pol.policyname, pol.tablename);
+    end loop;
+end $$;
+
+-- 9. RLS: profiles, locations, user_locations -----------------------------
+
+create policy "Authenticated users can read profiles"
+    on public.profiles for select
+    to authenticated
+    using (true);
+
 create policy "Authenticated users can read locations"
     on public.locations for select
     to authenticated
     using (true);
 
-drop policy if exists "Admins can insert locations" on public.locations;
 create policy "Admins can insert locations"
     on public.locations for insert
     to authenticated
     with check (public.is_admin());
 
-drop policy if exists "Admins can update locations" on public.locations;
 create policy "Admins can update locations"
     on public.locations for update
     to authenticated
     using (public.is_admin());
 
--- 9. RLS: user_locations ---------------------------------------------------
-
-alter table public.user_locations enable row level security;
-
-drop policy if exists "Users can read own memberships, admins read all" on public.user_locations;
 create policy "Users can read own memberships, admins read all"
     on public.user_locations for select
     to authenticated
     using (user_id = auth.uid() or public.is_admin());
 
-drop policy if exists "Admins can insert memberships" on public.user_locations;
 create policy "Admins can insert memberships"
     on public.user_locations for insert
     to authenticated
     with check (public.is_admin());
 
-drop policy if exists "Admins can delete memberships" on public.user_locations;
 create policy "Admins can delete memberships"
     on public.user_locations for delete
     to authenticated
@@ -162,55 +183,46 @@ create policy "Admins can delete memberships"
 
 -- 10. RLS: assets, history, orders — scoped to the caller's location(s) --
 
-drop policy if exists "Authenticated users can read assets" on public.assets;
 create policy "Users can read assets in their locations"
     on public.assets for select
     to authenticated
     using (public.has_location_access(location_id));
 
-drop policy if exists "Authenticated users can insert assets" on public.assets;
 create policy "Users can insert assets in their locations"
     on public.assets for insert
     to authenticated
     with check (auth.uid() = created_by and public.has_location_access(location_id));
 
-drop policy if exists "Authenticated users can update assets" on public.assets;
 create policy "Users can update assets in their locations"
     on public.assets for update
     to authenticated
     using (public.has_location_access(location_id));
 
-drop policy if exists "Authenticated users can delete assets" on public.assets;
 create policy "Users can delete assets in their locations"
     on public.assets for delete
     to authenticated
     using (public.has_location_access(location_id));
 
-drop policy if exists "Authenticated users can read history" on public.history;
 create policy "Users can read history in their locations"
     on public.history for select
     to authenticated
-    using (location_id is null or public.has_location_access(location_id));
+    using (public.has_location_access(location_id));
 
-drop policy if exists "Authenticated users can insert history" on public.history;
 create policy "Users can insert history in their locations"
     on public.history for insert
     to authenticated
-    with check (auth.uid() = user_id and (location_id is null or public.has_location_access(location_id)));
+    with check (auth.uid() = user_id and public.has_location_access(location_id));
 
-drop policy if exists "Authenticated users can read orders" on public.orders;
 create policy "Users can read orders in their locations"
     on public.orders for select
     to authenticated
     using (public.has_location_access(location_id));
 
-drop policy if exists "Authenticated users can insert orders" on public.orders;
 create policy "Users can insert orders in their locations"
     on public.orders for insert
     to authenticated
     with check (auth.uid() = created_by and public.has_location_access(location_id));
 
-drop policy if exists "Authenticated users can delete orders" on public.orders;
 create policy "Users can delete orders in their locations"
     on public.orders for delete
     to authenticated
