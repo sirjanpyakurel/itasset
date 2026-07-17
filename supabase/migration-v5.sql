@@ -24,10 +24,12 @@ create table if not exists public.user_locations (
 --    the admin panel can list users without needing service-role access) --
 
 alter table public.profiles add column if not exists role text not null default 'member';
--- Drop any pre-existing role constraint (e.g. from an earlier experiment) before normalizing,
--- since it may not allow the values we're about to set
+-- "add column if not exists" is a no-op when role already exists (e.g. from an earlier
+-- experiment), so its old default/constraint/nullability survive unless forced here too
 alter table public.profiles drop constraint if exists profiles_role_check;
 update public.profiles set role = 'member' where role is null or role not in ('admin', 'member');
+alter table public.profiles alter column role set default 'member';
+alter table public.profiles alter column role set not null;
 alter table public.profiles add constraint profiles_role_check check (role in ('admin', 'member'));
 
 alter table public.profiles add column if not exists email text;
