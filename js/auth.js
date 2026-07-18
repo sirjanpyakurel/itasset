@@ -120,14 +120,33 @@ async function loadUserContext(user) {
     const savedStillValid = availableLocations.some(l => String(l.id) === saved);
     activeLocationId = savedStillValid ? Number(saved) : (availableLocations[0]?.id ?? null);
 
-    updateOfficeSubtitle();
+    updateOfficeIndicator();
 }
 
-function updateOfficeSubtitle() {
-    const el = document.getElementById("subtitle");
-    if (!el) return;
-    const activeLoc = availableLocations.find(l => l.id === activeLocationId);
-    el.textContent = activeLoc ? activeLoc.name : "No office assigned";
+// Shows the current office in the sidebar: a dropdown when the user can switch
+// between several, or a plain label when there's only one (or none) to show.
+function updateOfficeIndicator() {
+    const select = document.getElementById("locationSwitcher");
+    const staticLabel = document.getElementById("locationStatic");
+    if (!select || !staticLabel) return;
+
+    if (availableLocations.length > 1) {
+        select.innerHTML = "";
+        availableLocations.forEach(loc => {
+            const opt = document.createElement("option");
+            opt.value = loc.id;
+            opt.textContent = loc.name;
+            if (loc.id === activeLocationId) opt.selected = true;
+            select.appendChild(opt);
+        });
+        select.style.display = "block";
+        staticLabel.style.display = "none";
+    } else {
+        select.style.display = "none";
+        staticLabel.style.display = "flex";
+        const activeLoc = availableLocations.find(l => l.id === activeLocationId);
+        staticLabel.textContent = activeLoc ? activeLoc.name : "No office assigned";
+    }
 }
 
 async function loadAllLocations() {
@@ -139,6 +158,14 @@ async function loadAllLocations() {
 function setActiveLocation(id) {
     activeLocationId = id;
     localStorage.setItem("activeLocationId", String(id));
+}
+
+// Shared handler for the sidebar office switcher, wired up on every page.
+// Each page reloads whatever data it owns, if it has any to reload.
+function switchLocation(idStr) {
+    setActiveLocation(Number(idStr));
+    if (typeof loadAssets === "function") loadAssets();
+    if (typeof loadHistory === "function") loadHistory();
 }
 
 async function checkUser() {

@@ -724,31 +724,14 @@ function exportReorderList() {
 /* ---------- Location switcher ---------- */
 
 function initLocationSwitcher() {
-    const switcher = document.getElementById("locationSwitcher");
     const navBtn = document.getElementById("locationsNavBtn");
-
     navBtn.style.display = isAdmin() ? "inline-flex" : "none";
 
     const addBtn = document.getElementById("addAssetBtn");
     addBtn.disabled = !activeLocationId;
     addBtn.title = activeLocationId ? "" : "You haven't been assigned to an office yet";
 
-    if (availableLocations.length > 1) {
-        switcher.innerHTML = availableLocations
-            .map(loc => `<option value="${loc.id}"${loc.id === activeLocationId ? " selected" : ""}>${escapeHtml(loc.name)}</option>`)
-            .join("");
-        switcher.style.display = "block";
-    } else {
-        switcher.style.display = "none";
-    }
-
-    updateOfficeSubtitle();
-}
-
-function switchLocation(idStr) {
-    setActiveLocation(Number(idStr));
-    updateOfficeSubtitle();
-    loadAssets();
+    updateOfficeIndicator();
 }
 
 /* ---------- Misc ---------- */
