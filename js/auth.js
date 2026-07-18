@@ -119,6 +119,15 @@ async function loadUserContext(user) {
     const saved = localStorage.getItem("activeLocationId");
     const savedStillValid = availableLocations.some(l => String(l.id) === saved);
     activeLocationId = savedStillValid ? Number(saved) : (availableLocations[0]?.id ?? null);
+
+    updateOfficeSubtitle();
+}
+
+function updateOfficeSubtitle() {
+    const el = document.getElementById("subtitle");
+    if (!el) return;
+    const activeLoc = availableLocations.find(l => l.id === activeLocationId);
+    el.textContent = activeLoc ? activeLoc.name : "No office assigned";
 }
 
 async function loadAllLocations() {

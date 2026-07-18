@@ -742,19 +742,12 @@ function initLocationSwitcher() {
         switcher.style.display = "none";
     }
 
-    updateSubtitle();
-}
-
-function updateSubtitle() {
-    const activeLoc = availableLocations.find(l => l.id === activeLocationId);
-    document.getElementById("subtitle").textContent = activeLoc
-        ? `Storage Management System — ${activeLoc.name}`
-        : "Storage Management System";
+    updateOfficeSubtitle();
 }
 
 function switchLocation(idStr) {
     setActiveLocation(Number(idStr));
-    updateSubtitle();
+    updateOfficeSubtitle();
     loadAssets();
 }
 
