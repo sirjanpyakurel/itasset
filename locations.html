@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
-<link rel="stylesheet" href="css/style.css?v=11">
+<link rel="stylesheet" href="css/style.css?v=12">
 </head>
 
 <body style="display: none;">
@@ -19,7 +19,7 @@
             <div class="sidebar-mark" id="brandIcon"></div>
             <div class="sidebar-brand-text">
                 <strong>IT Inventory</strong>
-                <span id="subtitle">Storage Management System</span>
+                <span id="subtitle">Storage Management</span>
             </div>
             <button class="sidebar-collapse-btn" id="collapseBtn" onclick="event.stopPropagation(); toggleSidebar()" title="Collapse sidebar">
                 <span id="collapseIcon"></span>
@@ -42,6 +42,10 @@
                 <span id="themeIcon"></span>
                 <span class="nav-label" id="themeLabel">Dark mode</span>
             </button>
+            <div class="sidebar-user">
+                <span id="userIcon"></span>
+                <span class="nav-label" id="sidebarUserLabel"></span>
+            </div>
             <button class="sidebar-logout" onclick="logout()">
                 <span id="logoutIcon"></span>
                 <span class="nav-label">Logout</span>
@@ -133,17 +137,18 @@
 <div id="toasts"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/config.js?v=11"></script>
-<script src="js/auth.js?v=11"></script>
+<script src="js/config.js?v=12"></script>
+<script src="js/auth.js?v=12"></script>
 <script>
     document.getElementById("brandIcon").innerHTML = ICONS.box;
     document.getElementById("logoutIcon").innerHTML = ICONS.logout;
     document.getElementById("navDashboardIcon").innerHTML = ICONS.grid;
     document.getElementById("navHistoryIcon").innerHTML = ICONS.clock;
     document.getElementById("navLocationsIcon").innerHTML = ICONS.building;
+    document.getElementById("userIcon").innerHTML = ICONS.user;
     document.getElementById("addIcon").innerHTML = ICONS.plus;
 </script>
-<script src="js/locations.js?v=11"></script>
+<script src="js/locations.js?v=12"></script>
 
 </body>
 </html>

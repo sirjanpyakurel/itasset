@@ -15,7 +15,8 @@ const ICONS = {
     download: '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M4 21h16"/></svg>',
     check: '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>',
     x: '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>',
-    panelLeft: '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/><path d="M14 10l-2 2 2 2"/></svg>'
+    panelLeft: '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/><path d="M14 10l-2 2 2 2"/></svg>',
+    user: '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/></svg>'
 };
 
 /* ---------- Theme (light / dark) ---------- */
@@ -121,6 +122,14 @@ async function loadUserContext(user) {
     activeLocationId = savedStillValid ? Number(saved) : (availableLocations[0]?.id ?? null);
 
     updateOfficeIndicator();
+    updateUserLabel();
+}
+
+// Shows who's signed in (the part of their email before the @) in the sidebar footer.
+function updateUserLabel() {
+    const el = document.getElementById("sidebarUserLabel");
+    if (!el) return;
+    el.textContent = currentUserProfile?.email ? currentUserProfile.email.split("@")[0] : "";
 }
 
 // Shows the current office in the sidebar: a dropdown when the user can switch
