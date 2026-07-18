@@ -94,7 +94,7 @@ function renderLocationsTable() {
         tr.innerHTML = `
             <td>${escapeHtml(loc.name)}</td>
             <td>${count} user${count === 1 ? "" : "s"}</td>
-            <td class="row-actions"><button class="btn-edit">Rename</button></td>`;
+            <td class="row-actions"><button class="btn-edit">${ICONS.pencil}Rename</button></td>`;
         tr.querySelector(".btn-edit").onclick = () => openRenameLocationModal(loc);
         table.appendChild(tr);
     });
@@ -169,7 +169,7 @@ function renderUsersTable() {
             <td>${escapeHtml(profile.email || profile.full_name || profile.id)}</td>
             <td>${profile.role === "admin" ? '<span class="badge edit">Admin</span>' : '<span class="badge ok">Member</span>'}</td>
             <td>${locNames.length ? escapeHtml(locNames.join(", ")) : '<span class="pending-note">None</span>'}</td>
-            <td class="row-actions"><button class="btn-edit">Assign Offices</button></td>`;
+            <td class="row-actions"><button class="btn-edit">${ICONS.building}Assign Offices</button></td>`;
         tr.querySelector(".btn-edit").onclick = () => openAssignModal(profile);
         table.appendChild(tr);
     });

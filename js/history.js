@@ -64,7 +64,8 @@ async function loadHistory() {
 
     const action = document.getElementById("filter").value;
     const location = document.getElementById("locationFilter").value;
-    const dateFilter = document.getElementById("dateFilter").value;
+    const dateFrom = document.getElementById("dateFromFilter").value;
+    const dateTo = document.getElementById("dateToFilter").value;
 
     let query = supabaseClient
         .from("history")
@@ -75,12 +76,14 @@ async function loadHistory() {
     if (action !== "ALL") query = query.eq("action", action);
     if (location) query = query.eq("location_id", Number(location));
 
-    if (dateFilter) {
-        // Local calendar day -> UTC range, filtered server-side
-        const [y, m, d] = dateFilter.split("-").map(Number);
-        const start = new Date(y, m - 1, d);
-        const end = new Date(y, m - 1, d + 1);
-        query = query.gte("created_at", start.toISOString()).lt("created_at", end.toISOString());
+    // Local calendar day(s) -> UTC range, filtered server-side
+    if (dateFrom) {
+        const [y, m, d] = dateFrom.split("-").map(Number);
+        query = query.gte("created_at", new Date(y, m - 1, d).toISOString());
+    }
+    if (dateTo) {
+        const [y, m, d] = dateTo.split("-").map(Number);
+        query = query.lt("created_at", new Date(y, m - 1, d + 1).toISOString());
     }
 
     const { data, error } = await query;
@@ -126,7 +129,8 @@ function clearFilters() {
     document.getElementById("historySearch").value = "";
     document.getElementById("filter").value = "ALL";
     document.getElementById("locationFilter").value = "";
-    document.getElementById("dateFilter").value = "";
+    document.getElementById("dateFromFilter").value = "";
+    document.getElementById("dateToFilter").value = "";
     loadHistory();
 }
 

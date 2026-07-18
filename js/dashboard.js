@@ -164,8 +164,8 @@ function renderTable() {
             <td>${quantityCell}</td>
             <td>${badge}</td>
             <td class="row-actions">
-                <button class="btn-edit">Edit</button>
-                <button class="btn-update">Update</button>
+                <button class="btn-edit">${ICONS.pencil}Edit</button>
+                <button class="btn-update">${ICONS.refresh}Update</button>
             </td>`;
 
         const nameCell = tr.querySelector(".name-cell");
@@ -502,8 +502,8 @@ function renderPendingOrders() {
         row.innerHTML = `
             <span class="pending-order-info">${order.quantity} units — ${escapeHtml(order.reason || "No reason given")}</span>
             <span class="pending-order-actions">
-                <button type="button" class="btn-deliver">Delivered</button>
-                <button type="button" class="btn-cancel-order">Cancel</button>
+                <button type="button" class="btn-deliver">${ICONS.check}Delivered</button>
+                <button type="button" class="btn-cancel-order">${ICONS.x}Cancel</button>
             </span>`;
         row.querySelector(".btn-deliver").onclick = () => deliverOrder(order);
         row.querySelector(".btn-cancel-order").onclick = () => cancelOrder(order);

@@ -4,27 +4,62 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Locations — IT Inventory</title>
-<link rel="stylesheet" href="css/style.css?v=7">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css?v=9">
 </head>
 
 <body style="display: none;">
 
-<div class="container">
+<div class="app-shell">
+    <aside class="sidebar">
+        <div class="sidebar-brand" onclick="window.location.href='dashboard.html'">
+            <div class="sidebar-mark" id="brandIcon"></div>
+            <div class="sidebar-brand-text">
+                <strong>IT Inventory</strong>
+                <span id="subtitle">Storage Management System</span>
+            </div>
+            <button class="sidebar-collapse-btn" id="collapseBtn" onclick="event.stopPropagation(); toggleSidebar()" title="Collapse sidebar">
+                <span id="collapseIcon"></span>
+            </button>
+        </div>
+
+        <div class="sidebar-switcher">
+            <select id="locationSwitcher" onchange="switchLocation(this.value)" style="display:none"></select>
+        </div>
+
+        <nav class="sidebar-nav">
+            <a href="dashboard.html" id="navDashboard"><span id="navDashboardIcon"></span><span class="nav-label">Dashboard</span></a>
+            <a href="history.html" id="navHistory"><span id="navHistoryIcon"></span><span class="nav-label">History</span></a>
+            <a href="locations.html" class="active" id="locationsNavBtn"><span id="navLocationsIcon"></span><span class="nav-label">Locations</span></a>
+        </nav>
+
+        <div class="sidebar-footer">
+            <button class="theme-toggle" onclick="toggleTheme()">
+                <span id="themeIcon"></span>
+                <span class="nav-label" id="themeLabel">Dark mode</span>
+            </button>
+            <button class="sidebar-logout" onclick="logout()">
+                <span id="logoutIcon"></span>
+                <span class="nav-label">Logout</span>
+            </button>
+        </div>
+    </aside>
+
+    <div class="main-content">
+    <div class="container">
 
     <div class="header">
         <div>
             <h1>Locations</h1>
             <p>Manage offices and who has access to each</p>
         </div>
-        <div>
-            <a href="dashboard.html"><button class="secondary">Dashboard</button></a>
-            <button class="logout" onclick="logout()">Logout</button>
-        </div>
     </div>
 
     <div class="actions">
         <span class="spacer"></span>
-        <button onclick="openAddLocationModal()">+ Add Location</button>
+        <button onclick="openAddLocationModal()"><span id="addIcon"></span>Add Location</button>
     </div>
 
     <div class="table-box">
@@ -42,7 +77,7 @@
 
     <div class="header" style="margin-top:32px;">
         <div>
-            <h1 style="font-size:22px;">Users</h1>
+            <h1 style="font-size:18px;">Users</h1>
             <p>Assign each person to the office(s) they should see</p>
         </div>
     </div>
@@ -61,6 +96,8 @@
         </table>
     </div>
 
+    </div>
+    </div>
 </div>
 
 <!-- Add / rename location modal -->
@@ -94,9 +131,17 @@
 <div id="toasts"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/config.js?v=7"></script>
-<script src="js/auth.js?v=7"></script>
-<script src="js/locations.js?v=7"></script>
+<script src="js/config.js?v=9"></script>
+<script src="js/auth.js?v=9"></script>
+<script>
+    document.getElementById("brandIcon").innerHTML = ICONS.box;
+    document.getElementById("logoutIcon").innerHTML = ICONS.logout;
+    document.getElementById("navDashboardIcon").innerHTML = ICONS.grid;
+    document.getElementById("navHistoryIcon").innerHTML = ICONS.clock;
+    document.getElementById("navLocationsIcon").innerHTML = ICONS.building;
+    document.getElementById("addIcon").innerHTML = ICONS.plus;
+</script>
+<script src="js/locations.js?v=9"></script>
 
 </body>
 </html>

@@ -1,39 +1,27 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Accept Invite — IT Inventory</title>
-    <link rel="stylesheet" href="css/style.css?v=7">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css?v=9">
 </head>
 
 <body class="login-page">
 
 <div class="login-box">
 
+    <div class="login-mark" id="brandIcon"></div>
     <h2>IT Inventory</h2>
     <h3>Set your password to finish joining</h3>
 
     <form id="acceptInviteForm">
-
-    <input
-        id="newPassword"
-        type="password"
-        placeholder="New password"
-        minlength="6"
-        required
-    >
-
-    <input
-        id="confirmPassword"
-        type="password"
-        placeholder="Confirm password"
-        minlength="6"
-        required
-    >
-
-    <button type="submit">
-        Set Password &amp; Continue
-    </button>
-
+    <input id="newPassword" type="password" placeholder="New password" minlength="6" required>
+    <input id="confirmPassword" type="password" placeholder="Confirm password" minlength="6" required>
+    <button type="submit">Set Password &amp; Continue</button>
     </form>
 
     <p id="message"></p>
@@ -41,8 +29,12 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/config.js?v=7"></script>
-<script src="js/accept-invite.js?v=7"></script>
+<script src="js/config.js?v=9"></script>
+<script src="js/auth.js?v=9"></script>
+<script>
+    document.getElementById("brandIcon").innerHTML = ICONS.box;
+</script>
+<script src="js/accept-invite.js?v=9"></script>
 
 </body>
 </html>

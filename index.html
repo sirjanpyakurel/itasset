@@ -1,26 +1,32 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>IT Inventory Login</title>
-    <link rel="stylesheet" href="css/style.css?v=7">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css?v=9">
 </head>
 
 <body class="login-page">
 
 <div class="login-box">
 
+    <div class="login-mark" id="brandIcon"></div>
     <h2>IT Inventory</h2>
 
     <form id="loginForm">
 
-    <input 
+    <input
         id="email"
         type="email"
         placeholder="Email"
         required
     >
 
-    <input 
+    <input
         id="password"
         type="password"
         placeholder="Password"
@@ -40,10 +46,11 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-<script src="js/config.js?v=7"></script>
+<script src="js/config.js?v=9"></script>
 
-<script src="js/auth.js?v=7"></script>
+<script src="js/auth.js?v=9"></script>
 <script>
+    document.getElementById("brandIcon").innerHTML = ICONS.box;
     if (new URLSearchParams(window.location.search).get("timeout") === "1") {
         document.getElementById("message").textContent = "You were signed out due to inactivity.";
     }

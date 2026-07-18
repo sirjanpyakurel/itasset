@@ -4,23 +4,56 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>IT Inventory</title>
-<link rel="stylesheet" href="css/style.css?v=7">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css?v=9">
 </head>
 
 <body style="display: none;">
 
-<div class="container">
+<div class="app-shell">
+    <aside class="sidebar">
+        <div class="sidebar-brand" onclick="window.location.reload()">
+            <div class="sidebar-mark" id="brandIcon"></div>
+            <div class="sidebar-brand-text">
+                <strong>IT Inventory</strong>
+                <span id="subtitle">Storage Management System</span>
+            </div>
+            <button class="sidebar-collapse-btn" id="collapseBtn" onclick="event.stopPropagation(); toggleSidebar()" title="Collapse sidebar">
+                <span id="collapseIcon"></span>
+            </button>
+        </div>
+
+        <div class="sidebar-switcher">
+            <select id="locationSwitcher" onchange="switchLocation(this.value)" style="display:none"></select>
+        </div>
+
+        <nav class="sidebar-nav">
+            <a href="dashboard.html" class="active" id="navDashboard"><span id="navDashboardIcon"></span><span class="nav-label">Dashboard</span></a>
+            <a href="history.html" id="navHistory"><span id="navHistoryIcon"></span><span class="nav-label">History</span></a>
+            <a href="locations.html" id="locationsNavBtn" style="display:none"><span id="navLocationsIcon"></span><span class="nav-label">Locations</span></a>
+        </nav>
+
+        <div class="sidebar-footer">
+            <button class="theme-toggle" onclick="toggleTheme()">
+                <span id="themeIcon"></span>
+                <span class="nav-label" id="themeLabel">Dark mode</span>
+            </button>
+            <button class="sidebar-logout" onclick="logout()">
+                <span id="logoutIcon"></span>
+                <span class="nav-label">Logout</span>
+            </button>
+        </div>
+    </aside>
+
+    <div class="main-content">
+    <div class="container">
 
     <div class="header">
         <div>
-            <h1 onclick="window.location.reload()">IT Inventory</h1>
-            <p id="subtitle">Storage Management System</p>
-        </div>
-        <div>
-            <select id="locationSwitcher" onchange="switchLocation(this.value)" style="display:none"></select>
-            <a href="locations.html"><button class="secondary" id="locationsNavBtn" style="display:none">Locations</button></a>
-            <a href="history.html"><button class="history-btn">History</button></a>
-            <button class="logout" onclick="logout()">Logout</button>
+            <h1>Dashboard</h1>
+            <p>Manage stock for your assigned office(s)</p>
         </div>
     </div>
 
@@ -50,8 +83,8 @@
             <button onclick="toggleLowFilter()" title="Clear">&times;</button>
         </span>
         <span class="spacer"></span>
-        <button class="secondary" id="exportReorderBtn" onclick="exportReorderList()">Export Reorder List</button>
-        <button id="addAssetBtn" onclick="openAddModal()">+ Add Asset</button>
+        <button class="secondary" id="exportReorderBtn" onclick="exportReorderList()"><span id="exportIcon"></span>Export Reorder List</button>
+        <button id="addAssetBtn" onclick="openAddModal()"><span id="addIcon"></span>Add Asset</button>
     </div>
 
     <div class="table-box">
@@ -69,6 +102,8 @@
         </table>
     </div>
 
+    </div>
+    </div>
 </div>
 
 <!-- Add / Edit asset modal -->
@@ -114,7 +149,7 @@
                 <button type="button" class="cancel" onclick="closeAssetModal()">Cancel</button>
             </div>
             <div class="modal-buttons" id="deleteAssetRow" style="display:none">
-                <button type="button" class="btn-danger" id="deleteAssetBtn">Delete this asset</button>
+                <button type="button" class="btn-danger" id="deleteAssetBtn"><span id="deleteAssetIcon"></span>Delete this asset</button>
             </div>
         </form>
     </div>
@@ -153,7 +188,7 @@
         <p>Permanently delete <strong id="deleteAssetName"></strong> from inventory?</p>
         <p class="danger-text">This cannot be undone. Past history entries are kept.</p>
         <div class="modal-buttons">
-            <button class="btn-danger" id="confirmDeleteButton">Delete</button>
+            <button class="btn-danger" id="confirmDeleteButton"><span id="confirmDeleteIcon"></span>Delete</button>
             <button class="cancel" onclick="closeDeleteModal()">Cancel</button>
         </div>
     </div>
@@ -162,9 +197,20 @@
 <div id="toasts"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/config.js?v=7"></script>
-<script src="js/auth.js?v=7"></script>
-<script src="js/dashboard.js?v=7"></script>
+<script src="js/config.js?v=9"></script>
+<script src="js/auth.js?v=9"></script>
+<script>
+    document.getElementById("brandIcon").innerHTML = ICONS.box;
+    document.getElementById("logoutIcon").innerHTML = ICONS.logout;
+    document.getElementById("navDashboardIcon").innerHTML = ICONS.grid;
+    document.getElementById("navHistoryIcon").innerHTML = ICONS.clock;
+    document.getElementById("navLocationsIcon").innerHTML = ICONS.building;
+    document.getElementById("exportIcon").innerHTML = ICONS.download;
+    document.getElementById("addIcon").innerHTML = ICONS.plus;
+    document.getElementById("deleteAssetIcon").innerHTML = ICONS.trash;
+    document.getElementById("confirmDeleteIcon").innerHTML = ICONS.trash;
+</script>
+<script src="js/dashboard.js?v=9"></script>
 
 </body>
 </html>
