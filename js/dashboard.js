@@ -59,6 +59,15 @@ function stockStatus(asset) {
     return asset.quantity === 0 ? "out" : "low";
 }
 
+// Human-friendly status words the inventory search matches on, so typing
+// e.g. "ordered" or "out of stock" filters by stock status too.
+const STATUS_SEARCH_TERMS = {
+    ok: "in stock",
+    ordered: "ordered",
+    low: "low stock",
+    out: "out of stock"
+};
+
 function emailPrefix(user) {
     return user.email ? user.email.split("@")[0] : "Unknown";
 }
@@ -100,7 +109,11 @@ function visibleAssets() {
     let rows = allAssets.filter(a => {
         if (lowOnly && !needsOrdering(a)) return false;
         if (category && a.category !== category) return false;
-        if (text && !`${a.name} ${a.category} ${a.description ?? ""}`.toLowerCase().includes(text)) return false;
+        if (text) {
+            const statusText = STATUS_SEARCH_TERMS[stockStatus(a)] ?? "";
+            const haystack = `${a.name} ${a.category} ${a.description ?? ""} ${statusText}`.toLowerCase();
+            if (!haystack.includes(text)) return false;
+        }
         return true;
     });
 

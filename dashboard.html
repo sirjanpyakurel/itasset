@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
-<link rel="stylesheet" href="css/style.css?v=13">
+<link rel="stylesheet" href="css/style.css?v=14">
 </head>
 
 <body style="display: none;">
@@ -80,7 +80,7 @@
     </div>
 
     <div class="actions">
-        <input id="searchBox" placeholder="Search inventory..." oninput="applyFilters()">
+        <input id="searchBox" placeholder="Search name, category, or status..." oninput="applyFilters()">
         <select id="categoryFilter" onchange="applyFilters()">
             <option value="">All Categories</option>
         </select>
@@ -208,8 +208,8 @@
 <div id="toasts"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/config.js?v=13"></script>
-<script src="js/auth.js?v=13"></script>
+<script src="js/config.js?v=14"></script>
+<script src="js/auth.js?v=14"></script>
 <script>
     document.getElementById("brandIcon").innerHTML = ICONS.box;
     document.getElementById("logoutIcon").innerHTML = ICONS.logout;
@@ -222,7 +222,7 @@
     document.getElementById("deleteAssetIcon").innerHTML = ICONS.trash;
     document.getElementById("confirmDeleteIcon").innerHTML = ICONS.trash;
 </script>
-<script src="js/dashboard.js?v=13"></script>
+<script src="js/dashboard.js?v=14"></script>
 
 </body>
 </html>
