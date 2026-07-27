@@ -469,15 +469,22 @@ function setStockMode(mode) {
 
 function openStockModal(asset) {
     currentStockAsset = asset;
-    const pending = pendingOrderQty(asset);
-    document.getElementById("stockModalInfo").innerText = pending > 0
-        ? `${asset.name} — ${asset.quantity} in stock (+${pending} on order)`
-        : `${asset.name} — ${asset.quantity} in stock`;
+    updateStockModalInfo();
     document.getElementById("stockQuantityInput").value = "";
     document.getElementById("stockReasonInput").value = "";
-    setStockMode(pending > 0 ? "ORDER" : "ADD");
+    setStockMode(pendingOrderQty(asset) > 0 ? "ORDER" : "ADD");
     document.getElementById("stockModal").style.display = "flex";
     document.getElementById("stockQuantityInput").focus();
+}
+
+// Keeps the stock modal's header line in sync with the asset's current stock
+// and outstanding order count (used on open and after each partial delivery).
+function updateStockModalInfo() {
+    if (!currentStockAsset) return;
+    const pending = pendingOrderQty(currentStockAsset);
+    document.getElementById("stockModalInfo").innerText = pending > 0
+        ? `${currentStockAsset.name} — ${currentStockAsset.quantity} in stock (+${pending} on order)`
+        : `${currentStockAsset.name} — ${currentStockAsset.quantity} in stock`;
 }
 
 function closeStockModal() {
@@ -502,10 +509,14 @@ function renderPendingOrders() {
         row.innerHTML = `
             <span class="pending-order-info">${order.quantity} units — ${escapeHtml(order.reason || "No reason given")}</span>
             <span class="pending-order-actions">
-                <button type="button" class="btn-deliver">${ICONS.check}Delivered</button>
+                <input type="number" class="deliver-qty" min="1" max="${order.quantity}" value="${order.quantity}"
+                       title="How many arrived?" aria-label="Quantity received"
+                       oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+                <button type="button" class="btn-deliver">${ICONS.check}Deliver</button>
                 <button type="button" class="btn-cancel-order">${ICONS.x}Cancel</button>
             </span>`;
-        row.querySelector(".btn-deliver").onclick = () => deliverOrder(order);
+        const qtyInput = row.querySelector(".deliver-qty");
+        row.querySelector(".btn-deliver").onclick = () => deliverOrder(order, qtyInput.value);
         row.querySelector(".btn-cancel-order").onclick = () => cancelOrder(order);
         box.appendChild(row);
     });
@@ -591,14 +602,50 @@ async function confirmStockUpdate() {
     loadAssets();
 }
 
-async function deliverOrder(order) {
+// Receive some or all of a pending order. A partial receipt (fewer units than
+// were ordered) tops up stock by what arrived and shrinks the order to the
+// balance so the remainder stays visible as pending; a full receipt clears it.
+async function deliverOrder(order, deliveredQtyRaw) {
     const user = await getSessionUser();
     if (!user) return;
 
     const asset = allAssets.find(a => a.id === order.asset_id);
     if (!asset) return;
 
-    const newQuantity = asset.quantity + order.quantity;
+    // Default to the whole order, but clamp to [1, ordered] so a partial
+    // receipt can't over-deliver or drop the order to zero units.
+    const requested = parseInt(deliveredQtyRaw, 10);
+    const deliveredQty = Number.isNaN(requested)
+        ? order.quantity
+        : Math.min(Math.max(requested, 1), order.quantity);
+
+    const remaining = order.quantity - deliveredQty;
+    const newQuantity = asset.quantity + deliveredQty;
+
+    // Settle the order FIRST (shrink for a partial receipt, remove for a full
+    // one) and confirm the write actually changed a row via .select(). RLS can
+    // silently block a write and return no error — settling before we touch
+    // stock means such a block aborts here rather than adding stock while the
+    // order lingers and gets double-counted next time.
+    if (remaining > 0) {
+        const { data, error } = await supabaseClient
+            .from("orders")
+            .update({ quantity: remaining })
+            .eq("id", order.id)
+            .select();
+        if (error) return toast(error.message, "error");
+        if (!data || data.length === 0)
+            return toast("Couldn't update the order — run supabase/migration-v6.sql to enable partial delivery", "error");
+    } else {
+        const { data, error } = await supabaseClient
+            .from("orders")
+            .delete()
+            .eq("id", order.id)
+            .select();
+        if (error) return toast(error.message, "error");
+        if (!data || data.length === 0)
+            return toast("Couldn't remove the order — please refresh and try again", "error");
+    }
 
     const { error: updateError } = await supabaseClient
         .from("assets")
@@ -607,22 +654,37 @@ async function deliverOrder(order) {
 
     if (updateError) return toast(updateError.message, "error");
 
-    const { error: deleteError } = await supabaseClient.from("orders").delete().eq("id", order.id);
-    if (deleteError) return toast(deleteError.message, "error");
-
     await logHistory({
         asset_id: asset.id,
         user_id: user.id,
         location_id: order.location_id,
         action: "DELIVER",
-        quantity: order.quantity,
-        reason: order.reason || "Order delivered",
+        quantity: deliveredQty,
+        reason: remaining > 0
+            ? `Partial delivery — ${remaining} still on order${order.reason ? ` (${order.reason})` : ""}`
+            : order.reason || "Order delivered",
         done_by: emailPrefix(user)
     });
 
-    closeStockModal();
-    toast(`Delivered ${order.quantity} × ${asset.name} (now ${newQuantity})`, "success");
-    loadAssets();
+    await loadAssets();
+
+    // Re-point at the refreshed asset and keep the modal open while any order
+    // is still outstanding, so partial shipments can be received one after
+    // another; otherwise close out.
+    currentStockAsset = allAssets.find(a => a.id === asset.id) || null;
+    if (currentStockAsset && pendingOrderQty(currentStockAsset) > 0) {
+        updateStockModalInfo();
+        renderPendingOrders();
+    } else {
+        closeStockModal();
+    }
+
+    toast(
+        remaining > 0
+            ? `Delivered ${deliveredQty} × ${asset.name} — ${remaining} still pending`
+            : `Delivered ${deliveredQty} × ${asset.name} (now ${newQuantity})`,
+        "success"
+    );
 }
 
 async function cancelOrder(order) {

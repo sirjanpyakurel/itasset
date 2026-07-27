@@ -491,8 +491,17 @@ button.secondary:hover { background: var(--surface-alt); }
 }
 .pending-order-row:last-child { border-bottom: none; }
 .pending-order-info { font-size: 13.5px; color: var(--text); }
-.pending-order-actions { display: flex; gap: 6px; flex-shrink: 0; }
+.pending-order-actions { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
 .pending-order-actions button { padding: 6px 12px; font-size: 12.5px; }
+/* Narrow inline "how many arrived" field; overrides the full-width modal input default */
+.pending-order-actions .deliver-qty {
+    display: inline-block;
+    width: 54px;
+    margin: 0;
+    padding: 6px 8px;
+    text-align: center;
+    font-size: 12.5px;
+}
 .pending-empty { font-size: 13.5px; color: var(--text-muted); margin: 4px 0; }
 
 .btn-deliver { background: var(--success); }
