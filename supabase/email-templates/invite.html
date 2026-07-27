@@ -1,0 +1,43 @@
+<!--
+  Custom "Invite user" email template for Supabase.
+
+  Why this exists: Microsoft Defender Safe Links auto-visits every <a href>
+  link in incoming mail to scan it, which burns Supabase's single-use invite
+  token before the recipient clicks it — they land on accept-invite.html to
+  an "invalid or expired" error. This template avoids the problem by never
+  wrapping the confirmation URL in a clickable <a> tag; it's shown as plain
+  text that the user copies and pastes into their browser instead.
+
+  Where to paste this: Supabase Dashboard -> your project -> Authentication
+  -> Email Templates -> "Invite user" -> paste this into the body field ->
+  Save. Send yourself a test invite afterward to confirm it renders well.
+-->
+<div style="font-family: Arial, Helvetica, sans-serif; max-width: 480px; margin: 0 auto; color: #1e293b;">
+
+  <h2 style="color: #4c3f91; margin: 0 0 4px;">IT Inventory</h2>
+  <p style="color: #64748b; margin: 0 0 24px; font-size: 14px;">You've been invited to join</p>
+
+  <p style="font-size: 15px; line-height: 1.5;">
+    You've been invited to create an account on <strong>{{ .SiteURL }}</strong>.
+  </p>
+
+  <p style="font-size: 15px; line-height: 1.5;">
+    To accept, copy the link below and paste it into your browser's address bar
+    (do not forward this email — the link only works once):
+  </p>
+
+  <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px 16px; margin: 16px 0; word-break: break-all; font-family: Consolas, Menlo, monospace; font-size: 13px; color: #1e293b;">
+    {{ .ConfirmationURL }}
+  </div>
+
+  <p style="font-size: 13px; color: #64748b; line-height: 1.5;">
+    If your email opens this as a clickable link anyway and it says the link
+    is invalid, select the text above manually, copy it, and paste it into a
+    new browser tab yourself.
+  </p>
+
+  <p style="font-size: 13px; color: #64748b; margin-top: 24px;">
+    If you weren't expecting this invite, you can ignore this email.
+  </p>
+
+</div>
